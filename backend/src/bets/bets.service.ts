@@ -4,7 +4,8 @@ import { UpdateBetDto } from './dto/update-bet.dto';
 
 @Injectable()
 export class BetsService {
-  create(createBetDto: CreateBetDto) {
+  create(_createBetDto: CreateBetDto) {
+    void _createBetDto;
     return 'This action adds a new bet';
   }
 
@@ -16,7 +17,8 @@ export class BetsService {
     return `This action returns a #${id} bet`;
   }
 
-  update(id: number, updateBetDto: UpdateBetDto) {
+  update(id: number, _updateBetDto: UpdateBetDto) {
+    void _updateBetDto;
     return `This action updates a #${id} bet`;
   }
 

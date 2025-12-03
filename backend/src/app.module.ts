@@ -1,14 +1,17 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+
 import { User } from './users/entities/user.entity';
 import { Team } from './teams/entities/team.entity';
 import { Match } from './matches/entities/match.entity';
 import { Bet } from './bets/entities/bet.entity';
 import { Game } from './games/entities/game.entity';
 import { MatchOdd } from './match-odds/entities/match-odd.entity';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+
 import { AuthModule } from './auth/auth.module';
 import { TeamsModule } from './teams/teams.module';
 import { MatchesModule } from './matches/matches.module';
@@ -20,7 +23,6 @@ import { UsersModule } from './users/users.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      //TODO fix this eslint error
       isGlobal: true,
       envFilePath: '.env',
     }),

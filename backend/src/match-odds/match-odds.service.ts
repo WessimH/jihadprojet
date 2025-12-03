@@ -4,7 +4,8 @@ import { UpdateMatchOddDto } from './dto/update-match-odd.dto';
 
 @Injectable()
 export class MatchOddsService {
-  create(createMatchOddDto: CreateMatchOddDto) {
+  create(_createMatchOddDto: CreateMatchOddDto) {
+    void _createMatchOddDto;
     return 'This action adds a new matchOdd';
   }
 
@@ -16,7 +17,8 @@ export class MatchOddsService {
     return `This action returns a #${id} matchOdd`;
   }
 
-  update(id: number, updateMatchOddDto: UpdateMatchOddDto) {
+  update(id: number, _updateMatchOddDto: UpdateMatchOddDto) {
+    void _updateMatchOddDto;
     return `This action updates a #${id} matchOdd`;
   }
 
