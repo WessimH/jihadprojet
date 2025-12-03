@@ -13,16 +13,16 @@ export class GamesService {
     return `This action returns all games`;
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return `This action returns a #${id} game`;
   }
 
-  update(id: number, _updateGameDto: UpdateGameDto) {
+  update(id: string, _updateGameDto: UpdateGameDto) {
     void _updateGameDto;
     return `This action updates a #${id} game`;
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} game`;
   }
 }

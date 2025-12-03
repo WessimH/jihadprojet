@@ -28,16 +28,31 @@ import { UsersModule } from './users/users.module';
     }),
 
     TypeOrmModule.forRootAsync({
-      useFactory: () => ({
-        type: 'postgres',
-        host: process.env.DB_HOST ?? 'localhost',
-        port: Number(process.env.DB_PORT ?? 5432),
-        username: process.env.DB_USER ?? 'postgres',
-        password: process.env.DB_PASSWORD ?? 'postgres',
-        database: process.env.DB_NAME ?? 'app_db',
-        entities: [User, Team, Match, Bet, Game, MatchOdd],
-        synchronize: false,
-      }),
+      useFactory: () => {
+        if (
+          process.env.NODE_ENV === 'test' ||
+          process.env.USE_SQLITE === 'true'
+        ) {
+          return {
+            type: 'sqlite',
+            database: ':memory:',
+            dropSchema: true,
+            synchronize: true,
+            entities: [User, Team, Match, Bet, Game, MatchOdd],
+          } as const;
+        }
+
+        return {
+          type: 'postgres',
+          host: process.env.DB_HOST ?? 'localhost',
+          port: Number(process.env.DB_PORT ?? 5432),
+          username: process.env.DB_USER ?? 'postgres',
+          password: process.env.DB_PASSWORD ?? 'postgres',
+          database: process.env.DB_NAME ?? 'app_db',
+          entities: [User, Team, Match, Bet, Game, MatchOdd],
+          synchronize: false,
+        } as const;
+      },
     }),
 
     AuthModule,

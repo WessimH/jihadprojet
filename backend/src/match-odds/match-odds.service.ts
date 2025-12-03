@@ -13,16 +13,16 @@ export class MatchOddsService {
     return `This action returns all matchOdds`;
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return `This action returns a #${id} matchOdd`;
   }
 
-  update(id: number, _updateMatchOddDto: UpdateMatchOddDto) {
+  update(id: string, _updateMatchOddDto: UpdateMatchOddDto) {
     void _updateMatchOddDto;
     return `This action updates a #${id} matchOdd`;
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} matchOdd`;
   }
 }

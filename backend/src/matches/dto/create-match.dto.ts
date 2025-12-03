@@ -1,12 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsUUID,
-  IsDateString,
-  IsInt,
-  Min,
-  IsOptional,
-  IsIn,
-} from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsUUID, IsDate, IsInt, Min, IsOptional, IsIn } from 'class-validator';
 
 export class CreateMatchDto {
   @ApiProperty({ format: 'uuid' })
@@ -25,13 +19,22 @@ export class CreateMatchDto {
   @IsUUID()
   game_id!: string;
 
-  @ApiProperty({ format: 'date-time' })
-  @IsDateString()
-  match_date!: string;
+  @ApiProperty({
+    format: 'date-time',
+    description:
+      'Match start time. Send an ISO-8601 string; it will be converted to a Date object.',
+  })
+  @Type(() => Date)
+  @IsDate()
+  match_date!: Date;
 
-  @ApiProperty({ enum: ['scheduled', 'live', 'completed', 'cancelled'] })
-  @IsIn(['scheduled', 'live', 'completed', 'cancelled'])
-  status!: 'scheduled' | 'live' | 'completed' | 'cancelled';
+  @ApiProperty({
+    enum: ['SCHEDULED', 'LIVE', 'COMPLETED', 'CANCELLED'],
+    description:
+      'Uppercase enum only: SCHEDULED | LIVE | COMPLETED | CANCELLED',
+  })
+  @IsIn(['SCHEDULED', 'LIVE', 'COMPLETED', 'CANCELLED'])
+  status!: 'SCHEDULED' | 'LIVE' | 'COMPLETED' | 'CANCELLED';
 
   @ApiProperty({ minimum: 0 })
   @IsInt()
@@ -48,7 +51,10 @@ export class CreateMatchDto {
   @IsUUID()
   winner_id?: string;
 
-  @ApiProperty({ enum: ['Bo1', 'Bo3', 'Bo5'] })
-  @IsIn(['Bo1', 'Bo3', 'Bo5'])
-  format!: 'Bo1' | 'Bo3' | 'Bo5';
+  @ApiProperty({
+    enum: ['BO1', 'BO3', 'BO5'],
+    description: 'Uppercase enum only: BO1 | BO3 | BO5',
+  })
+  @IsIn(['BO1', 'BO3', 'BO5'])
+  format!: 'BO1' | 'BO3' | 'BO5';
 }

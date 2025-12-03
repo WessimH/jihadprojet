@@ -13,16 +13,16 @@ export class TeamsService {
     return `This action returns all teams`;
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return `This action returns a #${id} team`;
   }
 
-  update(id: number, _updateTeamDto: UpdateTeamDto) {
+  update(id: string, _updateTeamDto: UpdateTeamDto) {
     void _updateTeamDto;
     return `This action updates a #${id} team`;
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} team`;
   }
 }

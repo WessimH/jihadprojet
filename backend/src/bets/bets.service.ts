@@ -13,16 +13,16 @@ export class BetsService {
     return `This action returns all bets`;
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return `This action returns a #${id} bet`;
   }
 
-  update(id: number, _updateBetDto: UpdateBetDto) {
+  update(id: string, _updateBetDto: UpdateBetDto) {
     void _updateBetDto;
     return `This action updates a #${id} bet`;
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} bet`;
   }
 }

@@ -40,9 +40,9 @@ export class Bet {
   @Column({
     type: 'varchar',
     length: 20,
-    default: 'pending',
+    default: 'PENDING',
   })
-  status: 'pending' | 'won' | 'lost' | 'cancelled';
+  status: 'PENDING' | 'WON' | 'LOST' | 'CANCELLED';
 
   @CreateDateColumn({ name: 'placed_at' })
   placedAt: Date;

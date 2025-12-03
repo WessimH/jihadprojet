@@ -28,9 +28,9 @@ export class Match {
   @Column({
     type: 'varchar',
     length: 20,
-    default: 'scheduled',
+    default: 'SCHEDULED',
   })
-  status: 'scheduled' | 'live' | 'completed' | 'cancelled';
+  status: 'SCHEDULED' | 'LIVE' | 'COMPLETED' | 'CANCELLED';
 
   @Column({ name: 'team1_score', type: 'int', default: 0 })
   team1Score: number;
@@ -41,8 +41,13 @@ export class Match {
   @ManyToOne(() => Team)
   winner: Team;
 
-  @Column({ length: 50, nullable: true })
-  format: string | null;
+  @Column({
+    type: 'enum',
+    enum: ['BO1', 'BO3', 'BO5'],
+    enumName: 'match_format',
+    nullable: true,
+  })
+  format: 'BO1' | 'BO3' | 'BO5' | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
