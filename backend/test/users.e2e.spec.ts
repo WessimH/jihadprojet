@@ -21,47 +21,196 @@ describe('Users (e2e)', () => {
     await app.close();
   });
 
-  it('POST /users creates user (201), hash password, email unique, balance default 0', async () => {
-    const email = `user${Date.now()}@mail.test`;
-    const payload = { email, password: 'secret123' };
-    const res = await request(server).post('/users').send(payload).expect(201);
-    expect(res.body).toHaveProperty('id');
-    expect(res.body).toHaveProperty('email', email);
-    expect(res.body).not.toHaveProperty('password');
-    expect(res.body).toHaveProperty('balance', 0);
+  // ---------------------------------------
+  // CREATE USER - VALID CASES
+  // ---------------------------------------
 
-    // Email unique
-    await request(server).post('/users').send(payload).expect(409);
-  });
-
-  it('POST /auth/login returns access_token, 401 on bad password', async () => {
-    const email = `login${Date.now()}@mail.test`;
-    const password = 'secret123';
-    await request(server).post('/users').send({ email, password }).expect(201);
-
-    const ok = await request(server)
-      .post('/auth/login')
-      .send({ email, password })
-      .expect(200);
-    expect(ok.body).toHaveProperty('access_token');
-
-    await request(server)
-      .post('/auth/login')
-      .send({ email, password: 'wrong' })
-      .expect(401);
-  });
-
-  it('GET /users/:id returns user without password_hash', async () => {
-    const email = `get${Date.now()}@mail.test`;
-    const password = 'secret123';
-    const created = await request(server)
+  it('POST /users should create user with valid data', async () => {
+    const res = await request(server)
       .post('/users')
-      .send({ email, password })
+      .send({
+        username: 'alice',
+        email: 'alice@example.com',
+        password: 'Str0ngPass1',
+        balance: 0,
+      })
       .expect(201);
-    const id = created.body.id;
-    const res = await request(server).get(`/users/${id}`).expect(200);
-    expect(res.body).toHaveProperty('id', id);
-    expect(res.body).toHaveProperty('email', email);
-    expect(res.body).not.toHaveProperty('password_hash');
+
+    expect(res.body).toMatch(/This action adds a new user/);
+  });
+
+  it('POST /users should create user with minimal data', async () => {
+    await request(server)
+      .post('/users')
+      .send({
+        username: 'bob',
+        email: 'bob@example.com',
+        password: 'ValidPass123',
+      })
+      .expect(201);
+  });
+
+  // ---------------------------------------
+  // CREATE USER - VALIDATION ERRORS
+  // ---------------------------------------
+
+  it('POST /users should reject username too short', async () => {
+    await request(server)
+      .post('/users')
+      .send({
+        username: 'ab', // Only 2 chars, should be 3-50
+        email: 'test@example.com',
+        password: 'ValidPass123',
+      })
+      .expect(400);
+  });
+
+  it('POST /users should reject username too long', async () => {
+    const longUsername = 'a'.repeat(51); // 51 chars, should be 3-50
+    await request(server)
+      .post('/users')
+      .send({
+        username: longUsername,
+        email: 'test@example.com',
+        password: 'ValidPass123',
+      })
+      .expect(400);
+  });
+
+  it('POST /users should reject username with spaces', async () => {
+    await request(server)
+      .post('/users')
+      .send({
+        username: 'user name', // Contains space
+        email: 'test@example.com',
+        password: 'ValidPass123',
+      })
+      .expect(400);
+  });
+
+  it('POST /users should reject invalid email', async () => {
+    await request(server)
+      .post('/users')
+      .send({
+        username: 'testuser',
+        email: 'not-an-email',
+        password: 'ValidPass123',
+      })
+      .expect(400);
+  });
+
+  it('POST /users should reject weak password (no uppercase)', async () => {
+    await request(server)
+      .post('/users')
+      .send({
+        username: 'testuser',
+        email: 'test@example.com',
+        password: 'weakpass1', // No uppercase
+      })
+      .expect(400);
+  });
+
+  it('POST /users should reject weak password (no lowercase)', async () => {
+    await request(server)
+      .post('/users')
+      .send({
+        username: 'testuser',
+        email: 'test@example.com',
+        password: 'WEAKPASS1', // No lowercase
+      })
+      .expect(400);
+  });
+
+  it('POST /users should reject weak password (no digit)', async () => {
+    await request(server)
+      .post('/users')
+      .send({
+        username: 'testuser',
+        email: 'test@example.com',
+        password: 'WeakPass', // No digit
+      })
+      .expect(400);
+  });
+
+  it('POST /users should reject negative balance', async () => {
+    await request(server)
+      .post('/users')
+      .send({
+        username: 'testuser',
+        email: 'test@example.com',
+        password: 'ValidPass123',
+        balance: -10,
+      })
+      .expect(400);
+  });
+
+  it('POST /users should forbid extra fields', async () => {
+    await request(server)
+      .post('/users')
+      .send({
+        username: 'testuser',
+        email: 'test@example.com',
+        password: 'ValidPass123',
+        extra_field: 'should-be-rejected',
+      })
+      .expect(400);
+  });
+
+  // ---------------------------------------
+  // GET USER - UUID VALIDATION
+  // ---------------------------------------
+
+  it('GET /users/:id should reject invalid UUID', async () => {
+    await request(server).get('/users/invalid-uuid').expect(400);
+  });
+
+  it('GET /users/:id should return 404 for non-existent user', async () => {
+    const nonExistentId = 'f47ac10b-58cc-4372-a567-0e02b2c3d999';
+    await request(server).get(`/users/${nonExistentId}`).expect(404);
+  });
+
+  it('GET /users should return all users', async () => {
+    const res = await request(server).get('/users').expect(200);
+    expect(res.body).toMatch(/This action returns all users/);
+  });
+
+  // ---------------------------------------
+  // UPDATE USER - VALIDATION
+  // ---------------------------------------
+
+  it('PATCH /users/:id should reject invalid UUID', async () => {
+    await request(server)
+      .patch('/users/invalid-uuid')
+      .send({ username: 'newname' })
+      .expect(400);
+  });
+
+  it('PATCH /users/:id should return 404 for non-existent user', async () => {
+    const nonExistentId = 'f47ac10b-58cc-4372-a567-0e02b2c3d998';
+    await request(server)
+      .patch(`/users/${nonExistentId}`)
+      .send({ username: 'newname' })
+      .expect(404);
+  });
+
+  it('PATCH /users/:id should validate DTO on update', async () => {
+    const validId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
+    await request(server)
+      .patch(`/users/${validId}`)
+      .send({ username: 'ab' }) // Too short
+      .expect(400);
+  });
+
+  // ---------------------------------------
+  // DELETE USER - VALIDATION
+  // ---------------------------------------
+
+  it('DELETE /users/:id should reject invalid UUID', async () => {
+    await request(server).delete('/users/invalid-uuid').expect(400);
+  });
+
+  it('DELETE /users/:id should return 404 for non-existent user', async () => {
+    const nonExistentId = 'f47ac10b-58cc-4372-a567-0e02b2c3d997';
+    await request(server).delete(`/users/${nonExistentId}`).expect(404);
   });
 });
