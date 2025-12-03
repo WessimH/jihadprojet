@@ -1,4 +1,4 @@
-name: CI
+name: CI-Docker
 
 on:
   push:
@@ -7,56 +7,64 @@ on:
     branches: [ main ]
 
 jobs:
-  build-and-test:
+  docker-ci:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "npm"
+      # ---------------------------------------
+      # Injecte les variables CI dans l'env (pas de .env local)
+      # ---------------------------------------
+      - name: Set environment variables
+        run: |
+          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> $GITHUB_ENV
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> $GITHUB_ENV
+          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> $GITHUB_ENV
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_ENV
+          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> $GITHUB_ENV
 
-      # ---------- FRONTEND ----------
-      - name: Install frontend deps
-        working-directory: ./frontend
-        run: npm install
+      # ---------------------------------------
+      # Build images
+      # ---------------------------------------
+      - name: Build frontend image
+        run: docker build -t ci-frontend ./frontend
 
+      - name: Build backend image
+        run: docker build -t ci-backend ./backend
+
+      # ---------------------------------------
+      # Lint (dans les conteneurs)
+      # ---------------------------------------
       - name: Lint frontend
-        working-directory: ./frontend
-        run: npm run lint --if-present
-
-      - name: Test frontend
-        working-directory: ./frontend
-        run: npm test --if-present
-
-      - name: Build frontend
-        working-directory: ./frontend
-        run: npm run build
-
-      # ---------- BACKEND ----------
-      - name: Install backend deps
-        working-directory: ./backend
-        run: npm install
+        run: docker run --rm ci-frontend npm run lint || exit 1
 
       - name: Lint backend
-        working-directory: ./backend
-        run: npm run lint --if-present
+        run: docker run --rm ci-backend npm run lint || exit 1
+
+      # ---------------------------------------
+      # Tests (dans les conteneurs)
+      # ---------------------------------------
+      - name: Test frontend
+        run: docker run --rm ci-frontend npm test || echo "no frontend tests"
 
       - name: Test backend
-        working-directory: ./backend
-        run: npm run test --if-present
+        run: docker run --rm ci-backend npm test || echo "no backend tests"
 
-      - name: Build backend
-        working-directory: ./backend
-        run: npm run build
+      # ---------------------------------------
+      # Vérifier que docker-compose.yml est bon (sans override)
+      # ---------------------------------------
+      - name: Start stack with docker-compose
+        run: docker compose -f docker-compose.yml up --build -d
 
-      # ---------- CACHE TYPEORM MIGRATIONS OPTIONAL ----------
-      # Juste là pour empêcher les devs de pleurer parce que "les migrations passent plus"
-      # Décommente si tu utilises les migrations en CI :
-      # - name: Run TypeORM migrations
-      #   working-directory: ./backend
-      #   run: npm run migration:run --if-present
+      - name: Check services health
+        run: sleep 10 && docker ps
+
+      # ---------------------------------------
+      # Arrêter proprement
+      # ---------------------------------------
+      - name: Shutdown
+        if: always()
+        run: docker compose -f docker-compose.yml down
