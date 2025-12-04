@@ -51,6 +51,9 @@ jobs:
 
       - name: Test backend
         working-directory: ./backend
+        env:
+          # run backend tests in 'test' mode so they use the in-memory sqlite driver
+          NODE_ENV: test
         run: npm test --if-present
 
       - name: Build backend
