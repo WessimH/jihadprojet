@@ -26,7 +26,7 @@ export class Bet {
   @Column({ type: 'decimal', precision: 8, scale: 2 })
   amount: string;
 
-  @Column({ type: 'decimal', precision: 4, scale: 2 })
+  @Column({ type: 'decimal', precision: 4, scale: 2 }) // todo : fix this asap wtf ia
   odds: string;
 
   @Column({

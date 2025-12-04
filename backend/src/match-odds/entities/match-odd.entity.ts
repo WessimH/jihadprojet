@@ -20,7 +20,7 @@ export class MatchOdd {
   @ManyToOne(() => Team)
   team: Team;
 
-  @Column({ type: 'decimal', precision: 4, scale: 2 })
+  @Column({ type: 'decimal', precision: 4, scale: 2 }) // todo : fix this asap wtf ia
   odds: string;
 
   @CreateDateColumn({ name: 'created_at' })

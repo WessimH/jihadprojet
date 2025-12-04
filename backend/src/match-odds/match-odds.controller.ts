@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { MatchOddsService } from './match-odds.service';
 import { CreateMatchOddDto } from './dto/create-match-odd.dto';
@@ -17,12 +18,15 @@ import {
   ApiParam,
   ApiBody,
 } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { AdminGuard } from '../auth/admin.guard';
 
 @ApiTags('Match Odds')
 @Controller('match-odds')
 export class MatchOddsController {
   constructor(private readonly matchOddsService: MatchOddsService) {}
 
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @Post()
   @ApiOperation({
     summary: 'Create match odds',

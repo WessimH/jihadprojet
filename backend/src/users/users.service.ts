@@ -1,28 +1,59 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { User } from './entities/user.entity';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
-  create(_createUserDto: CreateUserDto) {
-    void _createUserDto;
-    return 'This action adds a new user';
+  constructor(
+    @InjectRepository(User) private readonly repo: Repository<User>,
+  ) {}
+
+  async create(createUserDto: CreateUserDto) {
+    const user = new User();
+    user.username = createUserDto.username;
+    user.email = createUserDto.email;
+    if (createUserDto.password) {
+      user.passwordHash = await bcrypt.hash(createUserDto.password, 10);
+    }
+    user.balance = String(createUserDto.balance ?? 0);
+    return this.repo.save(user);
   }
 
   findAll() {
-    return `This action returns all users`;
+    return this.repo.find();
   }
 
   findOne(id: string) {
-    return `This action returns a #${id} user`;
+    return this.repo.findOne({ where: { id } });
   }
 
-  update(id: string, _updateUserDto: UpdateUserDto) {
-    void _updateUserDto;
-    return `This action updates a #${id} user`;
+  async findByUsername(username: string) {
+    return this.repo.findOne({ where: { username } });
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} user`;
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    const existing = await this.repo.findOne({ where: { id } });
+    if (!existing) throw new NotFoundException();
+    if (updateUserDto.password) {
+      existing.passwordHash = await bcrypt.hash(updateUserDto.password, 10);
+    }
+    if (typeof updateUserDto.balance !== 'undefined') {
+      existing.balance = String(updateUserDto.balance);
+    }
+    // apply other updates if present
+    if (updateUserDto.email) existing.email = updateUserDto.email;
+    if (updateUserDto.username) existing.username = updateUserDto.username;
+    return this.repo.save(existing);
+  }
+
+  async remove(id: string) {
+    const existing = await this.repo.findOne({ where: { id } });
+    if (!existing) throw new NotFoundException();
+    await this.repo.remove(existing);
+    return { removed: true };
   }
 }

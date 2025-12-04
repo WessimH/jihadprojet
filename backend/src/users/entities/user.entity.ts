@@ -45,6 +45,9 @@ export class User {
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
+  @Column({ name: 'is_admin', type: 'boolean', default: false })
+  isAdmin: boolean;
+
   @OneToMany(() => Bet, (bet) => bet.user)
   bets: Bet[];
 }
