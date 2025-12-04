@@ -86,12 +86,10 @@ describe('Session e2e', () => {
       .set('Authorization', `Bearer ${token}`)
       .expect(401);
 
-    // session should be gone (controller returns { error: 'not_found' })
-    const notFound = await request(app.getHttpServer() as unknown as App)
+    // after revocation the same token is rejected by the guard (unauthorized)
+    await request(app.getHttpServer() as unknown as App)
       .get(`/auth/login/${jti}`)
       .set('Authorization', `Bearer ${token}`)
-      .expect(200);
-    expect(notFound.body).toBeDefined();
-    expect(notFound.body.error).toBe('not_found');
+      .expect(401);
   });
 });

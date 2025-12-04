@@ -56,7 +56,13 @@ export class TeamsController {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : 'Failed to create team';
-      throw new BadRequestException(message);
+
+      const details =
+        err && typeof err === 'object' && 'details' in err
+          ? (err as Record<string, unknown>)['details']
+          : undefined;
+
+      throw new BadRequestException({ error: 'bad_request', message, details });
     }
   }
 
@@ -84,7 +90,13 @@ export class TeamsController {
       if (err instanceof NotFoundException) throw err;
       const message =
         err instanceof Error ? err.message : 'Failed to fetch team';
-      throw new BadRequestException(message);
+
+      const details =
+        err && typeof err === 'object' && 'details' in err
+          ? (err as Record<string, unknown>)['details']
+          : undefined;
+
+      throw new BadRequestException({ error: 'bad_request', message, details });
     }
   }
 
@@ -112,7 +124,13 @@ export class TeamsController {
       if (err instanceof NotFoundException) throw err;
       const message =
         err instanceof Error ? err.message : 'Failed to update team';
-      throw new BadRequestException(message);
+
+      const details =
+        err && typeof err === 'object' && 'details' in err
+          ? (err as Record<string, unknown>)['details']
+          : undefined;
+
+      throw new BadRequestException({ error: 'bad_request', message, details });
     }
   }
 
@@ -137,7 +155,13 @@ export class TeamsController {
       if (err instanceof NotFoundException) throw err;
       const message =
         err instanceof Error ? err.message : 'Failed to delete team';
-      throw new BadRequestException(message);
+
+      const details =
+        err && typeof err === 'object' && 'details' in err
+          ? (err as Record<string, unknown>)['details']
+          : undefined;
+
+      throw new BadRequestException({ error: 'bad_request', message, details });
     }
   }
 }
