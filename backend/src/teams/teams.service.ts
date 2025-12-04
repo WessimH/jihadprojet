@@ -26,8 +26,12 @@ export class TeamsService {
     }
 
     const team = this.repo.create({
-      ...createTeamDto,
-      totalEarnings: new Decimal(createTeamDto.total_earnings ?? 0),
+      name: createTeamDto.name,
+      tag: createTeamDto.tag,
+      country: createTeamDto.country,
+      logoUrl: createTeamDto.logo_url,
+      foundedYear: createTeamDto.founded_year,
+      totalEarnings: new Decimal(createTeamDto.total_earnings),
     });
     return this.repo.save(team);
   }

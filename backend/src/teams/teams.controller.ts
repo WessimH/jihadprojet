@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   BadRequestException,
-  NotFoundException,
   ParseUUIDPipe,
   UseGuards,
 } from '@nestjs/common';
@@ -84,22 +83,7 @@ export class TeamsController {
   })
   @ApiResponse({ status: 200, description: 'Team found.' })
   findOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    try {
-      const team = this.teamsService.findOne(id);
-      if (!team) throw new NotFoundException('Team not found');
-      return team;
-    } catch (err) {
-      if (err instanceof NotFoundException) throw err;
-      const message =
-        err instanceof Error ? err.message : 'Failed to fetch team';
-
-      const details =
-        err && typeof err === 'object' && 'details' in err
-          ? (err as Record<string, unknown>)['details']
-          : undefined;
-
-      throw new BadRequestException({ error: 'bad_request', message, details });
-    }
+    return this.teamsService.findOne(id);
   }
 
   @Patch(':id')
@@ -119,22 +103,7 @@ export class TeamsController {
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updateTeamDto: UpdateTeamDto,
   ) {
-    try {
-      const updated = this.teamsService.update(id, updateTeamDto);
-      if (!updated) throw new NotFoundException('Team not found');
-      return updated;
-    } catch (err) {
-      if (err instanceof NotFoundException) throw err;
-      const message =
-        err instanceof Error ? err.message : 'Failed to update team';
-
-      const details =
-        err && typeof err === 'object' && 'details' in err
-          ? (err as Record<string, unknown>)['details']
-          : undefined;
-
-      throw new BadRequestException({ error: 'bad_request', message, details });
-    }
+    return this.teamsService.update(id, updateTeamDto);
   }
 
   @Delete(':id')
@@ -151,21 +120,6 @@ export class TeamsController {
   })
   @ApiResponse({ status: 200, description: 'Team removed.' })
   remove(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    try {
-      const removed = this.teamsService.remove(id);
-      if (!removed) throw new NotFoundException('Team not found');
-      return removed;
-    } catch (err) {
-      if (err instanceof NotFoundException) throw err;
-      const message =
-        err instanceof Error ? err.message : 'Failed to delete team';
-
-      const details =
-        err && typeof err === 'object' && 'details' in err
-          ? (err as Record<string, unknown>)['details']
-          : undefined;
-
-      throw new BadRequestException({ error: 'bad_request', message, details });
-    }
+    return this.teamsService.remove(id);
   }
 }

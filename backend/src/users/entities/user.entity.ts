@@ -38,24 +38,10 @@ export class User {
     precision: 10,
     scale: 2,
     default: 0,
-  })
-  @Column({
-    name: 'total_bet',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    default: 0,
     transformer: new DecimalTransformer(),
   })
   totalBet: Decimal;
 
-  @Column({
-    name: 'total_won',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    default: 0,
-  })
   @Column({
     name: 'total_won',
     type: 'decimal',
