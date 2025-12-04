@@ -91,8 +91,8 @@ This project is a betting esport application made for Andy Ciqnuin's class
 * [![Next][Next.js]][Next-url]
 * [![Nest.js][Nest.js]][Nest-url]
 
-#### Stack explenation 
-I choosed Nest JS beacose of his rapidity to code and its performant Type Orm that helps me code faster and his strict structure that help me organize myself for the backend architecture i choose the architecture metier 
+#### Stack explanation 
+I chose NestJS because it enables rapid development; its performant TypeORM helps me implement features faster, and its strict structure helps me organize the backend. For the backend architecture, I chose a domain-driven (métier) approach.
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
