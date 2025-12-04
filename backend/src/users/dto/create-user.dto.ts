@@ -11,18 +11,24 @@ import {
 } from 'class-validator';
 
 export class CreateUserDto {
-  @ApiProperty({ minLength: 3, maxLength: 50, description: 'No spaces' })
+  @ApiProperty({
+    example: 'johndoe',
+    minLength: 3,
+    maxLength: 50,
+    description: 'No spaces',
+  })
   @IsString()
   @MinLength(3)
   @MaxLength(50)
   @Matches(/^\S+$/, { message: 'username must not contain spaces' })
   username!: string;
 
-  @ApiProperty({ example: 'user@example.com' })
+  @ApiProperty({ example: 'john@example.com' })
   @IsEmail()
   email!: string;
 
   @ApiProperty({
+    example: 'SecurePass1',
     minLength: 8,
     description: 'At least 1 upper, 1 lower, 1 digit',
   })
@@ -33,7 +39,7 @@ export class CreateUserDto {
   })
   password!: string;
 
-  @ApiProperty({ minimum: 0, required: false })
+  @ApiProperty({ example: 100, minimum: 0, required: false })
   @IsOptional()
   @IsNumber()
   @Min(0)

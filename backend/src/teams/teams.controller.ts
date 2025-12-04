@@ -22,6 +22,7 @@ import {
   ApiResponse,
   ApiParam,
   ApiBody,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 
 @ApiTags('Teams')
@@ -31,6 +32,7 @@ export class TeamsController {
 
   @Post()
   @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Create a team',
     description:
@@ -102,6 +104,7 @@ export class TeamsController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Update a team',
     description: 'Update a team by ID.',
@@ -136,6 +139,7 @@ export class TeamsController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Delete a team',
     description: 'Delete a team by ID.',

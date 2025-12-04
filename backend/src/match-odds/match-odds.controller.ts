@@ -17,6 +17,7 @@ import {
   ApiResponse,
   ApiParam,
   ApiBody,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AdminGuard } from '../auth/admin.guard';
@@ -28,6 +29,7 @@ export class MatchOddsController {
 
   @UseGuards(JwtAuthGuard, AdminGuard)
   @Post()
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Create match odds',
     description:

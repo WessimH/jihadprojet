@@ -12,35 +12,45 @@ import {
 } from 'class-validator';
 
 export class CreateTeamDto {
-  @ApiProperty()
+  @ApiProperty({ example: 'Team Liquid' })
   @IsString()
   @Length(1, 100)
   name!: string;
 
-  @ApiProperty({ description: 'Uppercase short tag (2-5 chars)' })
+  @ApiProperty({
+    example: 'TL',
+    description: 'Uppercase short tag (2-5 chars)',
+  })
   @IsString()
   @Length(2, 5)
   @Matches(/^[A-Z]{2,5}$/)
   tag!: string;
 
-  @ApiProperty({ description: 'ISO country code (e.g., FR, USA)' })
+  @ApiProperty({
+    example: 'US',
+    description: 'ISO country code (e.g., FR, USA)',
+  })
   @IsString()
   @Length(2, 3)
   @Matches(/^[A-Z]{2,3}$/)
   country!: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ example: 'https://example.com/logo.png', required: false })
   @IsOptional()
   @IsUrl()
   logo_url?: string;
 
-  @ApiProperty({ minimum: 1970, maximum: new Date().getFullYear() })
+  @ApiProperty({
+    example: 2000,
+    minimum: 1970,
+    maximum: new Date().getFullYear(),
+  })
   @IsInt()
   @Min(1970)
   @Max(new Date().getFullYear())
   founded_year!: number;
 
-  @ApiProperty({ minimum: 0 })
+  @ApiProperty({ example: 500000.5, minimum: 0 })
   @IsNumber()
   @Min(0)
   total_earnings!: number;

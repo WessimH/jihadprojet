@@ -19,6 +19,7 @@ import {
   ApiResponse,
   ApiParam,
   ApiBody,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 
 @ApiTags('Matches')
@@ -28,6 +29,7 @@ export class MatchesController {
 
   @Post()
   @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Create a match',
     description:
@@ -78,6 +80,7 @@ export class MatchesController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Update a match',
     description: 'Update fields of a match by ID.',
@@ -94,6 +97,7 @@ export class MatchesController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Delete a match',
     description: 'Delete a match by ID.',

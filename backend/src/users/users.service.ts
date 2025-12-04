@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -14,6 +18,21 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto) {
+    // Check for existing username/email before insert
+    const existingUsername = await this.repo.findOne({
+      where: { username: createUserDto.username },
+    });
+    if (existingUsername) {
+      throw new ConflictException('Username already exists');
+    }
+
+    const existingEmail = await this.repo.findOne({
+      where: { email: createUserDto.email },
+    });
+    if (existingEmail) {
+      throw new ConflictException('Email already exists');
+    }
+
     const user = new User();
     user.username = createUserDto.username;
     user.email = createUserDto.email;
@@ -23,7 +42,16 @@ export class UsersService {
     user.balance = new Decimal(createUserDto.balance ?? 0);
     user.totalBet = new Decimal(0);
     user.totalWon = new Decimal(0);
-    return this.repo.save(user);
+
+    try {
+      return await this.repo.save(user);
+    } catch (err) {
+      // Handle race condition where duplicate was inserted between check and save
+      if ((err as { code?: string }).code === '23505') {
+        throw new ConflictException('Username or email already exists');
+      }
+      throw err;
+    }
   }
 
   findAll() {
@@ -41,16 +69,43 @@ export class UsersService {
   async update(id: string, updateUserDto: UpdateUserDto) {
     const existing = await this.repo.findOne({ where: { id } });
     if (!existing) throw new NotFoundException();
+
+    // Check for duplicate username if changing
+    if (
+      updateUserDto.username &&
+      updateUserDto.username !== existing.username
+    ) {
+      const dup = await this.repo.findOne({
+        where: { username: updateUserDto.username },
+      });
+      if (dup) throw new ConflictException('Username already exists');
+    }
+
+    // Check for duplicate email if changing
+    if (updateUserDto.email && updateUserDto.email !== existing.email) {
+      const dup = await this.repo.findOne({
+        where: { email: updateUserDto.email },
+      });
+      if (dup) throw new ConflictException('Email already exists');
+    }
+
     if (updateUserDto.password) {
       existing.passwordHash = await bcrypt.hash(updateUserDto.password, 10);
     }
     if (typeof updateUserDto.balance !== 'undefined') {
       existing.balance = new Decimal(updateUserDto.balance);
     }
-    // apply other updates if present
     if (updateUserDto.email) existing.email = updateUserDto.email;
     if (updateUserDto.username) existing.username = updateUserDto.username;
-    return this.repo.save(existing);
+
+    try {
+      return await this.repo.save(existing);
+    } catch (err) {
+      if ((err as { code?: string }).code === '23505') {
+        throw new ConflictException('Username or email already exists');
+      }
+      throw err;
+    }
   }
 
   async remove(id: string) {

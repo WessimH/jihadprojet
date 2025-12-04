@@ -50,7 +50,7 @@ import { UsersModule } from './users/users.module';
           password: process.env.DB_PASSWORD ?? 'postgres',
           database: process.env.DB_NAME ?? 'app_db',
           entities: [User, Team, Match, Bet, Game, MatchOdd],
-          synchronize: false,
+          synchronize: process.env.NODE_ENV !== 'production', // auto-create tables in dev
         } as const;
       },
     }),
