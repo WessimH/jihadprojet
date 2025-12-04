@@ -8,6 +8,8 @@ import {
 } from 'typeorm';
 import { Match } from '../../matches/entities/match.entity';
 import { Team } from '../../teams/entities/team.entity';
+import Decimal from 'decimal.js';
+import { DecimalTransformer } from '../../common/transformers/decimal.transformer';
 
 @Entity({ name: 'match_odds' })
 export class MatchOdd {
@@ -20,8 +22,13 @@ export class MatchOdd {
   @ManyToOne(() => Team)
   team: Team;
 
-  @Column({ type: 'decimal', precision: 4, scale: 2 }) // todo : fix this asap wtf ia
-  odds: string;
+  @Column({
+    type: 'decimal',
+    precision: 4,
+    scale: 2,
+    transformer: new DecimalTransformer(),
+  }) // todo : fix this asap wtf ia
+  odds: Decimal;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

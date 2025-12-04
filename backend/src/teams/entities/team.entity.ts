@@ -4,6 +4,8 @@ import {
   Column,
   CreateDateColumn,
 } from 'typeorm';
+import Decimal from 'decimal.js';
+import { DecimalTransformer } from '../../common/transformers/decimal.transformer';
 
 @Entity({ name: 'teams' })
 export class Team {
@@ -31,8 +33,9 @@ export class Team {
     precision: 10,
     scale: 2,
     default: 0,
+    transformer: new DecimalTransformer(),
   })
-  totalEarnings: string;
+  totalEarnings: Decimal;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

@@ -8,6 +8,8 @@ import {
 import { User } from '../../users/entities/user.entity';
 import { Match } from '../../matches/entities/match.entity';
 import { Team } from '../../teams/entities/team.entity';
+import Decimal from 'decimal.js';
+import { DecimalTransformer } from '../../common/transformers/decimal.transformer';
 
 @Entity({ name: 'bets' })
 export class Bet {
@@ -23,19 +25,22 @@ export class Bet {
   @ManyToOne(() => Team)
   team: Team;
 
-  @Column({ type: 'decimal', precision: 8, scale: 2 })
-  amount: string;
-
-  @Column({ type: 'decimal', precision: 4, scale: 2 }) // todo : fix this asap wtf ia
-  odds: string;
+  @Column({
+    type: 'decimal',
+    precision: 8,
+    scale: 2,
+    transformer: new DecimalTransformer(),
+  })
+  amount: Decimal;
 
   @Column({
     name: 'potential_payout',
     type: 'decimal',
     precision: 10,
     scale: 2,
+    transformer: new DecimalTransformer(),
   })
-  potentialPayout: string;
+  potentialPayout: Decimal;
 
   @Column({
     type: 'varchar',

@@ -5,6 +5,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import * as bcrypt from 'bcrypt';
+import Decimal from 'decimal.js';
 
 @Injectable()
 export class UsersService {
@@ -19,7 +20,9 @@ export class UsersService {
     if (createUserDto.password) {
       user.passwordHash = await bcrypt.hash(createUserDto.password, 10);
     }
-    user.balance = String(createUserDto.balance ?? 0);
+    user.balance = new Decimal(createUserDto.balance ?? 0);
+    user.totalBet = new Decimal(0);
+    user.totalWon = new Decimal(0);
     return this.repo.save(user);
   }
 
@@ -42,7 +45,7 @@ export class UsersService {
       existing.passwordHash = await bcrypt.hash(updateUserDto.password, 10);
     }
     if (typeof updateUserDto.balance !== 'undefined') {
-      existing.balance = String(updateUserDto.balance);
+      existing.balance = new Decimal(updateUserDto.balance);
     }
     // apply other updates if present
     if (updateUserDto.email) existing.email = updateUserDto.email;

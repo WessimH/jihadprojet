@@ -22,7 +22,11 @@ export class Match {
   @ManyToOne(() => Game)
   game: Game;
 
-  @Column({ name: 'match_date', type: 'timestamp', nullable: true })
+  @Column({
+    name: 'match_date',
+    type: process.env.NODE_ENV === 'test' ? 'datetime' : 'timestamp',
+    nullable: true,
+  })
   matchDate: Date | null;
 
   @Column({
@@ -41,12 +45,16 @@ export class Match {
   @ManyToOne(() => Team)
   winner: Team;
 
-  @Column({
-    type: 'enum',
-    enum: ['BO1', 'BO3', 'BO5'],
-    enumName: 'match_format',
-    nullable: true,
-  })
+  @Column(
+    process.env.NODE_ENV === 'test'
+      ? { type: 'varchar', length: 3, nullable: true }
+      : {
+          type: 'enum',
+          enum: ['BO1', 'BO3', 'BO5'],
+          enumName: 'match_format',
+          nullable: true,
+        },
+  )
   format: 'BO1' | 'BO3' | 'BO5' | null;
 
   @CreateDateColumn({ name: 'created_at' })
