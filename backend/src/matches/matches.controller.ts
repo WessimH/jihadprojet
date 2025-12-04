@@ -6,7 +6,10 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { AdminGuard } from '../auth/admin.guard';
 import { MatchesService } from './matches.service';
 import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
@@ -24,6 +27,7 @@ export class MatchesController {
   constructor(private readonly matchesService: MatchesService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiOperation({
     summary: 'Create a match',
     description:
@@ -73,6 +77,7 @@ export class MatchesController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiOperation({
     summary: 'Update a match',
     description: 'Update fields of a match by ID.',
@@ -88,6 +93,7 @@ export class MatchesController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiOperation({
     summary: 'Delete a match',
     description: 'Delete a match by ID.',

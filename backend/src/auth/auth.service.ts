@@ -1,10 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { randomUUID } from 'crypto';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
+// note: use Node's built-in crypto.randomUUID() instead of the 'uuid' package
+
+export type Session = {
+  id: string; // jti
+  userId: string;
+  username: string;
+  isAdmin?: boolean;
+  createdAt: Date;
+};
 
 @Injectable()
 export class AuthService {
+  // in-memory session store (jti -> session). For production use a persistent store.
+  private readonly sessions = new Map<string, Session>();
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
@@ -17,7 +30,6 @@ export class AuthService {
     const ok = await bcrypt.compare(pass, user.passwordHash);
     if (!ok) return null;
     // return safe user object (no passwordHash)
-    // include isAdmin flag so tokens/guards can use it
     return {
       id: user.id,
       username: user.username,
@@ -25,16 +37,51 @@ export class AuthService {
     };
   }
 
-  async login(user: { id: string; username: string }) {
-    // include isAdmin in the token when available
+  // Create a session and return an access token (with jti)
+  async login(user: { id: string; username: string; isAdmin?: boolean }) {
+    const jti = randomUUID();
     const payload: Record<string, unknown> = {
       sub: user.id,
       username: user.username,
+      jti,
     };
-    if ((user as unknown as { isAdmin?: boolean }).isAdmin === true) {
-      payload.isAdmin = true;
-    }
+    if (user.isAdmin === true) payload.isAdmin = true;
+
+    // sign token
     const accessToken = await this.jwtService.signAsync(payload);
-    return { access_token: accessToken };
+
+    // store session
+    const session: Session = {
+      id: jti,
+      userId: user.id,
+      username: user.username,
+      isAdmin: user.isAdmin,
+      createdAt: new Date(),
+    };
+    this.sessions.set(jti, session);
+
+    return { access_token: accessToken, jti };
+  }
+
+  // Session CRUD
+  listSessions(): Session[] {
+    return Array.from(this.sessions.values());
+  }
+
+  getSession(id: string): Session | undefined {
+    return this.sessions.get(id);
+  }
+
+  // update session metadata (e.g., renew createdAt or set flags)
+  updateSession(id: string, patch: Partial<Session>): Session | undefined {
+    const existing = this.sessions.get(id);
+    if (!existing) return undefined;
+    const updated = { ...existing, ...patch };
+    this.sessions.set(id, updated);
+    return updated;
+  }
+
+  deleteSession(id: string): boolean {
+    return this.sessions.delete(id);
   }
 }

@@ -5,10 +5,14 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { AuthService } from './auth.service';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly authService: AuthService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
@@ -22,7 +26,21 @@ export class JwtAuthGuard implements CanActivate {
     }
     const token = parts[1];
     try {
-      const payload = await this.jwtService.verifyAsync(token);
+      const payload = (await this.jwtService.verifyAsync(token)) as unknown;
+      // ensure payload is an object and token has a jti and that the session is active
+      if (typeof payload !== 'object' || payload === null) {
+        throw new UnauthorizedException('Invalid token payload');
+      }
+      const jti = (payload as Record<string, unknown>)['jti'] as
+        | string
+        | undefined;
+      if (!jti) {
+        throw new UnauthorizedException('Missing jti in token');
+      }
+      const session = this.authService.getSession(jti);
+      if (!session) {
+        throw new UnauthorizedException('Token has been revoked');
+      }
       // attach payload for controllers
       req.user = payload;
       return true;

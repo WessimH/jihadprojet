@@ -9,7 +9,10 @@ import {
   BadRequestException,
   NotFoundException,
   ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { AdminGuard } from '../auth/admin.guard';
 import { TeamsService } from './teams.service';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
@@ -27,6 +30,7 @@ export class TeamsController {
   constructor(private readonly teamsService: TeamsService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiOperation({
     summary: 'Create a team',
     description:
@@ -85,6 +89,7 @@ export class TeamsController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiOperation({
     summary: 'Update a team',
     description: 'Update a team by ID.',
@@ -112,6 +117,7 @@ export class TeamsController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiOperation({
     summary: 'Delete a team',
     description: 'Delete a team by ID.',
