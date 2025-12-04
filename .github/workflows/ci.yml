@@ -7,23 +7,19 @@ on:
     branches: [ main ]
 
 jobs:
-  quality-check:
+  frontend-ci:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node (cache both apps)
+      - name: Setup Node (frontend)
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: |
-            frontend/package-lock.json
-            backend/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
 
-      # ---------------- FRONTEND ----------------
       - name: Install frontend dependencies
         working-directory: ./frontend
         run: npm ci
@@ -40,7 +36,20 @@ jobs:
         working-directory: ./frontend
         run: npm run build
 
-      # ---------------- BACKEND ----------------
+  backend-ci:
+    runs-on: ubuntu-latest
+    needs: frontend-ci
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node (backend)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
       - name: Install backend dependencies
         working-directory: ./backend
         run: npm ci
@@ -49,10 +58,10 @@ jobs:
         working-directory: ./backend
         run: npm run lint --if-present
 
-      - name: Test backend
+      - name: Test backend (unit & e2e)
         working-directory: ./backend
+        # run backend tests in 'test' mode so they use the in-memory sqlite driver
         env:
-          # run backend tests in 'test' mode so they use the in-memory sqlite driver
           NODE_ENV: test
         run: npm test --if-present
 
