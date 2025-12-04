@@ -1,8 +1,8 @@
 {
   "name": "backend",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "backend of a esport betting application",
+  "author": "Jihad 🤡",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
