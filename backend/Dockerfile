@@ -19,8 +19,6 @@ RUN npm run build
 # Expose the application port (matches PORT env / compose mapping)
 EXPOSE 5000
 
-# Pouet ?
-# We all love Jihah
 
 # Command to run the application
 CMD ["node", "dist/main"]
