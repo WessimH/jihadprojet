@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { authApi, usersApi, betsApi } from "@/lib/api";
 
 interface User {
   id: string;
@@ -17,9 +18,19 @@ interface User {
   createdAt?: string;
 }
 
+interface Bet {
+  id: string;
+  match?: { team1?: { name: string }; team2?: { name: string } };
+  amount: number;
+  odds: number;
+  status: string;
+  profit?: number;
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [bets, setBets] = useState<Bet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -36,22 +47,18 @@ export default function ProfilePage() {
       return;
     }
 
-    fetch("http://localhost:3001/auth/profile", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch");
-        return res.json();
-      })
-      .then((data) => {
-        setUser(data);
-        setUsername(data.username || "");
-        setEmail(data.email || "");
-        setIsLoading(false);
-      })
-      .catch(() => {
+    const fetchData = async () => {
+      try {
+        const [profileData, betsData] = await Promise.all([
+          authApi.getProfile(),
+          betsApi.list().catch(() => []),
+        ]);
+        const userData = profileData as unknown as User;
+        setUser(userData);
+        setUsername(userData.username || "");
+        setEmail(userData.email || "");
+        setBets(betsData as unknown as Bet[]);
+      } catch {
         // Demo data
         const demoUser = {
           id: "1",
@@ -63,8 +70,12 @@ export default function ProfilePage() {
         setUser(demoUser);
         setUsername(demoUser.username);
         setEmail(demoUser.email);
+      } finally {
         setIsLoading(false);
-      });
+      }
+    };
+
+    fetchData();
   }, [router]);
 
   const handleLogout = () => {
@@ -73,38 +84,31 @@ export default function ProfilePage() {
   };
 
   const handleSave = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!user?.id) return;
 
     setIsSaving(true);
     setMessage("");
 
     try {
-      const res = await fetch("http://localhost:3001/users/profile", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ username, email }),
-      });
-
-      if (res.ok) {
-        const updatedUser = await res.json();
-        setUser(updatedUser);
-        setIsEditing(false);
-        setMessage("Profil mis à jour avec succès !");
-      } else {
-        setMessage("Erreur lors de la mise à jour");
-      }
+      const updatedUser = await usersApi.update(user.id, { username, email });
+      setUser(updatedUser as unknown as User);
+      setIsEditing(false);
+      setMessage("Profile updated successfully!");
     } catch {
-      setMessage("Erreur de connexion au serveur");
+      setMessage("Error updating profile");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const demoHistory = [
+  const betHistory = bets.length > 0 ? bets.map(bet => ({
+    id: bet.id,
+    match: bet.match ? `${bet.match.team1?.name || 'TBD'} vs ${bet.match.team2?.name || 'TBD'}` : 'Unknown Match',
+    amount: bet.amount,
+    odds: bet.odds,
+    result: bet.status?.toLowerCase() || 'pending',
+    profit: bet.profit || 0,
+  })) : [
     {
       id: "1",
       match: "Team Liquid vs G2 Esports",
@@ -159,16 +163,16 @@ export default function ProfilePage() {
               href="/matches"
               className="text-neutral-400 hover:text-white transition-colors"
             >
-              Matchs
+              Matches
             </Link>
             <Link
               href="/teams"
               className="text-neutral-400 hover:text-white transition-colors"
             >
-              Équipes
+              Teams
             </Link>
             <Link href="/profile" className="text-cyan-400 font-medium">
-              Profil
+              Profile
             </Link>
           </nav>
           <Button
@@ -177,7 +181,7 @@ export default function ProfilePage() {
             onClick={handleLogout}
             className="border-neutral-700 text-neutral-300 hover:bg-neutral-800"
           >
-            Déconnexion
+            Logout
           </Button>
         </div>
       </header>
@@ -189,9 +193,9 @@ export default function ProfilePage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold text-white mb-2">Mon Profil 👤</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">My Profile 👤</h1>
           <p className="text-neutral-400">
-            Gérez vos informations et consultez votre historique
+            Manage your information and view your history
           </p>
         </motion.div>
 
@@ -221,8 +225,8 @@ export default function ProfilePage() {
                         <p className="text-neutral-400">{user?.email}</p>
                         {user?.createdAt && (
                           <p className="text-neutral-500 text-sm mt-1">
-                            Membre depuis{" "}
-                            {new Date(user.createdAt).toLocaleDateString("fr-FR", {
+                            Member since{" "}
+                            {new Date(user.createdAt).toLocaleDateString("en-US", {
                               month: "long",
                               year: "numeric",
                             })}
@@ -237,7 +241,7 @@ export default function ProfilePage() {
                         onClick={() => setIsEditing(true)}
                         className="border-neutral-700 text-neutral-300 hover:bg-neutral-800"
                       >
-                        Modifier
+                        Edit
                       </Button>
                     )}
                   </div>
@@ -246,7 +250,7 @@ export default function ProfilePage() {
                     <div className="space-y-4 border-t border-neutral-800 pt-6">
                       <div className="space-y-2">
                         <Label htmlFor="username" className="text-neutral-300">
-                          Nom d&apos;utilisateur
+                          Username
                         </Label>
                         <Input
                           id="username"
@@ -273,7 +277,7 @@ export default function ProfilePage() {
                           disabled={isSaving}
                           className="bg-cyan-500 hover:bg-cyan-600 text-black"
                         >
-                          {isSaving ? "Enregistrement..." : "Enregistrer"}
+                          {isSaving ? "Saving..." : "Save"}
                         </Button>
                         <Button
                           variant="outline"
@@ -284,20 +288,20 @@ export default function ProfilePage() {
                           }}
                           className="border-neutral-700 text-neutral-300 hover:bg-neutral-800"
                         >
-                          Annuler
+                          Cancel
                         </Button>
                       </div>
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-4 border-t border-neutral-800 pt-6">
                       <div className="bg-neutral-800/30 rounded-lg p-4">
-                        <p className="text-neutral-500 text-sm">Solde</p>
+                        <p className="text-neutral-500 text-sm">Balance</p>
                         <p className="text-2xl font-bold text-green-400">
-                          {(user?.balance || 0).toFixed(2)} €
+                          ${(user?.balance || 0).toFixed(2)}
                         </p>
                       </div>
                       <div className="bg-neutral-800/30 rounded-lg p-4">
-                        <p className="text-neutral-500 text-sm">Total paris</p>
+                        <p className="text-neutral-500 text-sm">Total Bets</p>
                         <p className="text-2xl font-bold text-white">24</p>
                       </div>
                     </div>
@@ -306,7 +310,7 @@ export default function ProfilePage() {
                   {message && (
                     <p
                       className={`mt-4 text-sm ${
-                        message.includes("succès")
+                        message.includes("success")
                           ? "text-green-400"
                           : "text-red-400"
                       }`}
@@ -325,12 +329,12 @@ export default function ProfilePage() {
               transition={{ delay: 0.2 }}
             >
               <h3 className="text-xl font-bold text-white mb-4">
-                Historique des paris
+                Bet History
               </h3>
               <Card className="bg-neutral-900/50 border-neutral-800">
                 <CardContent className="p-0">
                   <div className="divide-y divide-neutral-800">
-                    {demoHistory.map((bet) => (
+                    {betHistory.map((bet) => (
                       <div
                         key={bet.id}
                         className="p-4 flex items-center justify-between hover:bg-neutral-800/30 transition-colors"
@@ -338,7 +342,7 @@ export default function ProfilePage() {
                         <div>
                           <p className="text-white font-medium">{bet.match}</p>
                           <p className="text-neutral-500 text-sm">
-                            Mise: {bet.amount}€ • Cote: {bet.odds}
+                            Stake: ${bet.amount} • Odds: {bet.odds}
                           </p>
                         </div>
                         <div className="text-right">
@@ -352,10 +356,10 @@ export default function ProfilePage() {
                             }`}
                           >
                             {bet.result === "win"
-                              ? "Gagné"
+                              ? "Won"
                               : bet.result === "loss"
-                              ? "Perdu"
-                              : "En cours"}
+                              ? "Lost"
+                              : "Pending"}
                           </span>
                           {bet.profit !== 0 && bet.result !== "pending" && (
                             <p
@@ -364,7 +368,7 @@ export default function ProfilePage() {
                               }`}
                             >
                               {bet.profit > 0 ? "+" : ""}
-                              {bet.profit}€
+                              ${bet.profit}
                             </p>
                           )}
                         </div>
@@ -387,9 +391,9 @@ export default function ProfilePage() {
                 className="border-green-500/50 text-green-400 hover:bg-green-500/10 h-auto py-4"
               >
                 <div className="text-left">
-                  <p className="font-medium">Déposer des fonds</p>
+                  <p className="font-medium">Deposit Funds</p>
                   <p className="text-xs text-neutral-500">
-                    Ajouter de l&apos;argent à votre compte
+                    Add money to your account
                   </p>
                 </div>
               </Button>
@@ -398,9 +402,9 @@ export default function ProfilePage() {
                 className="border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 h-auto py-4"
               >
                 <div className="text-left">
-                  <p className="font-medium">Retirer des fonds</p>
+                  <p className="font-medium">Withdraw Funds</p>
                   <p className="text-xs text-neutral-500">
-                    Transférer vers votre compte bancaire
+                    Transfer to your bank account
                   </p>
                 </div>
               </Button>

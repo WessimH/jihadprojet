@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { teamsApi } from "@/lib/api";
 
 interface Team {
   id: string;
@@ -29,22 +30,26 @@ export default function TeamsPage() {
       return;
     }
 
-    fetch("http://localhost:3001/teams", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch");
-        return res.json();
-      })
-      .then((data) => {
-        setTeams(data);
+    const fetchTeams = async () => {
+      try {
+        const data = await teamsApi.list();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const formattedTeams: Team[] = data.map((team: any) => ({
+          id: String(team.id || ''),
+          name: team.name || 'Unknown Team',
+          tag: team.tag || 'UNK',
+          region: team.region,
+          winRate: team.winRate,
+        }));
+        setTeams(formattedTeams);
+      } catch (error) {
+        console.error('Failed to fetch teams:', error);
+      } finally {
         setIsLoading(false);
-      })
-      .catch(() => {
-        setIsLoading(false);
-      });
+      }
+    };
+
+    fetchTeams();
   }, [router]);
 
   const handleLogout = () => {
@@ -107,16 +112,16 @@ export default function TeamsPage() {
               href="/matches"
               className="text-neutral-400 hover:text-white transition-colors"
             >
-              Matchs
+              Matches
             </Link>
             <Link href="/teams" className="text-cyan-400 font-medium">
-              Équipes
+              Teams
             </Link>
             <Link
               href="/profile"
               className="text-neutral-400 hover:text-white transition-colors"
             >
-              Profil
+              Profile
             </Link>
           </nav>
           <Button
@@ -125,7 +130,7 @@ export default function TeamsPage() {
             onClick={handleLogout}
             className="border-neutral-700 text-neutral-300 hover:bg-neutral-800"
           >
-            Déconnexion
+            Logout
           </Button>
         </div>
       </header>
@@ -137,9 +142,9 @@ export default function TeamsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold text-white mb-2">Équipes 🏆</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Teams 🏆</h1>
           <p className="text-neutral-400">
-            Découvrez les équipes esports et leurs statistiques
+            Discover esports teams and their statistics
           </p>
         </motion.div>
 
@@ -147,7 +152,7 @@ export default function TeamsPage() {
         <div className="mb-8">
           <Input
             type="search"
-            placeholder="Rechercher une équipe..."
+            placeholder="Search for a team..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="max-w-md bg-neutral-800/50 border-neutral-700 text-white placeholder:text-neutral-500"
@@ -212,7 +217,7 @@ export default function TeamsPage() {
                         size="sm"
                         className="w-full text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10"
                       >
-                        Voir les matchs →
+                        View matches →
                       </Button>
                     </div>
                   </CardContent>
@@ -224,7 +229,7 @@ export default function TeamsPage() {
 
         {filteredTeams.length === 0 && !isLoading && (
           <div className="text-center py-12">
-            <p className="text-neutral-400">Aucune équipe trouvée</p>
+            <p className="text-neutral-400">No teams found</p>
           </div>
         )}
       </main>

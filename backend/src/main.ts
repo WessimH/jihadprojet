@@ -11,6 +11,13 @@ async function bootstrap() {
       logger: ['error', 'warn', 'log', 'debug', 'verbose'],
     });
 
+    // Enable CORS for frontend
+    app.enableCors({
+      origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      credentials: true,
+    });
+
     // Global input validation: strips unknown properties, rejects extra fields,
     // auto-transforms primitives, and runs class-validator on DTOs
     app.useGlobalPipes(

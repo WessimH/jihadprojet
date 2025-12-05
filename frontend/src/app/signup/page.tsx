@@ -16,6 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { BeamsBackground } from "@/components/ui/beams-background";
+import { usersApi, ApiError } from "@/lib/api";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -34,33 +35,25 @@ export default function SignUpPage() {
     setError("");
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Les mots de passe ne correspondent pas");
+      setError("Passwords do not match");
       setIsLoading(false);
       return;
     }
 
     try {
-      const response = await fetch("http://localhost:3001/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-        }),
+      await usersApi.create({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        router.push("/login?registered=true");
+      
+      router.push("/login?registered=true");
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message);
       } else {
-        setError(data.message || "Erreur lors de l'inscription");
+        setError("Connection error. Please try again.");
       }
-    } catch {
-      setError("Erreur de connexion au serveur");
     } finally {
       setIsLoading(false);
     }
@@ -84,10 +77,10 @@ export default function SignUpPage() {
                 <span className="text-4xl">🎮</span>
               </div>
               <CardTitle className="text-2xl text-center text-white">
-                Créer un compte
+                Sign Up
               </CardTitle>
               <CardDescription className="text-center text-neutral-400">
-                Rejoignez la communauté esports betting
+                Join the esports betting community
               </CardDescription>
             </CardHeader>
             <form onSubmit={handleSubmit}>
@@ -99,7 +92,7 @@ export default function SignUpPage() {
                 )}
                 <div className="space-y-2">
                   <Label htmlFor="username" className="text-neutral-300">
-                    Nom d&apos;utilisateur
+                    Username
                   </Label>
                   <Input
                     id="username"
@@ -131,7 +124,7 @@ export default function SignUpPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-neutral-300">
-                    Mot de passe
+                    Password
                   </Label>
                   <Input
                     id="password"
@@ -148,7 +141,7 @@ export default function SignUpPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword" className="text-neutral-300">
-                    Confirmer le mot de passe
+                    Confirm Password
                   </Label>
                   <Input
                     id="confirmPassword"
@@ -173,22 +166,22 @@ export default function SignUpPage() {
                   className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Création..." : "Créer mon compte"}
+                  {isLoading ? "Creating..." : "Create Account"}
                 </Button>
                 <p className="text-sm text-neutral-400 text-center">
-                  Déjà un compte ?{" "}
+                  Already have an account?{" "}
                   <Link
                     href="/login"
                     className="text-cyan-400 hover:text-cyan-300 transition-colors"
                   >
-                    Se connecter
+                    Login
                   </Link>
                 </p>
                 <Link
                   href="/"
                   className="text-sm text-neutral-500 hover:text-neutral-400 transition-colors text-center"
                 >
-                  ← Retour à l&apos;accueil
+                  ← Back to home
                 </Link>
               </CardFooter>
             </form>

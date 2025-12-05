@@ -16,6 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { BeamsBackground } from "@/components/ui/beams-background";
+import { authApi, ApiError } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,24 +33,20 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:3001/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.access_token) {
+      const data = await authApi.login(formData.username, formData.password);
+      
+      if (data.access_token) {
         localStorage.setItem("token", data.access_token);
         router.push("/dashboard");
       } else {
-        setError(data.message || "Identifiants invalides");
+        setError("Invalid credentials");
       }
-    } catch {
-      setError("Erreur de connexion au serveur");
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError("Connection error. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -73,10 +70,10 @@ export default function LoginPage() {
                 <span className="text-4xl">🎮</span>
               </div>
               <CardTitle className="text-2xl text-center text-white">
-                Connexion
+                Login
               </CardTitle>
               <CardDescription className="text-center text-neutral-400">
-                Entrez vos identifiants pour accéder à votre compte
+                Enter your credentials to access your account
               </CardDescription>
             </CardHeader>
             <form onSubmit={handleSubmit}>
@@ -88,12 +85,12 @@ export default function LoginPage() {
                 )}
                 <div className="space-y-2">
                   <Label htmlFor="username" className="text-neutral-300">
-                    Nom d&apos;utilisateur
+                    Username
                   </Label>
                   <Input
                     id="username"
                     type="text"
-                    placeholder="johndoe"
+                    placeholder="admin"
                     value={formData.username}
                     onChange={(e) =>
                       setFormData({ ...formData, username: e.target.value })
@@ -104,7 +101,7 @@ export default function LoginPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-neutral-300">
-                    Mot de passe
+                    Password
                   </Label>
                   <Input
                     id="password"
@@ -125,22 +122,22 @@ export default function LoginPage() {
                   className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Connexion..." : "Se connecter"}
+                  {isLoading ? "Logging in..." : "Login"}
                 </Button>
                 <p className="text-sm text-neutral-400 text-center">
-                  Pas encore de compte ?{" "}
+                  Don&apos;t have an account?{" "}
                   <Link
                     href="/signup"
                     className="text-cyan-400 hover:text-cyan-300 transition-colors"
                   >
-                    Créer un compte
+                    Sign up
                   </Link>
                 </p>
                 <Link
                   href="/"
                   className="text-sm text-neutral-500 hover:text-neutral-400 transition-colors text-center"
                 >
-                  ← Retour à l&apos;accueil
+                  ← Back to home
                 </Link>
               </CardFooter>
             </form>

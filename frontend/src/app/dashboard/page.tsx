@@ -12,16 +12,28 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { authApi, betsApi } from "@/lib/api";
 
 interface User {
   sub: string;
   username: string;
+  email?: string;
   isAdmin?: boolean;
+}
+
+interface Bet {
+  id: string;
+  match?: { team1?: { name: string }; team2?: { name: string } };
+  amount: number;
+  odds: number;
+  status: string;
+  selectedTeam?: { name: string };
 }
 
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [bets, setBets] = useState<Bet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -31,23 +43,23 @@ export default function DashboardPage() {
       return;
     }
 
-    fetch("http://localhost:3001/auth/profile", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Unauthorized");
-        return res.json();
-      })
-      .then((data) => {
-        setUser(data.user);
-        setIsLoading(false);
-      })
-      .catch(() => {
+    const fetchData = async () => {
+      try {
+        const [profileData, betsData] = await Promise.all([
+          authApi.getProfile(),
+          betsApi.list().catch(() => []),
+        ]);
+        setUser(profileData as unknown as User);
+        setBets(betsData as unknown as Bet[]);
+      } catch {
         localStorage.removeItem("token");
         router.push("/login");
-      });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
   }, [router]);
 
   const handleLogout = () => {
@@ -64,31 +76,37 @@ export default function DashboardPage() {
   }
 
   const stats = [
-    { label: "Paris actifs", value: "3", icon: "🎯" },
-    { label: "Paris gagnés", value: "12", icon: "🏆" },
-    { label: "Solde", value: "150€", icon: "💰" },
-    { label: "Taux de réussite", value: "67%", icon: "📈" },
+    { label: "Active Bets", value: String(bets.filter(b => b.status === 'PENDING').length || 0), icon: "🎯" },
+    { label: "Won Bets", value: String(bets.filter(b => b.status === 'WON').length || 0), icon: "🏆" },
+    { label: "Balance", value: "$150", icon: "💰" },
+    { label: "Win Rate", value: bets.length > 0 ? `${Math.round((bets.filter(b => b.status === 'WON').length / bets.length) * 100)}%` : "0%", icon: "📈" },
   ];
 
-  const recentBets = [
+  const recentBets = bets.length > 0 ? bets.slice(0, 3).map(bet => ({
+    match: bet.match ? `${bet.match.team1?.name || 'TBD'} vs ${bet.match.team2?.name || 'TBD'}` : 'Unknown Match',
+    team: bet.selectedTeam?.name || 'Unknown',
+    amount: `$${bet.amount}`,
+    odds: String(bet.odds),
+    status: bet.status?.toLowerCase() || 'pending',
+  })) : [
     {
       match: "Team Liquid vs G2",
       team: "Team Liquid",
-      amount: "25€",
+      amount: "$25",
       odds: "1.85",
       status: "pending",
     },
     {
       match: "Fnatic vs Cloud9",
       team: "Fnatic",
-      amount: "50€",
+      amount: "$50",
       odds: "2.10",
       status: "won",
     },
     {
       match: "T1 vs Gen.G",
       team: "T1",
-      amount: "30€",
+      amount: "$30",
       odds: "1.65",
       status: "lost",
     },
@@ -114,24 +132,24 @@ export default function DashboardPage() {
               href="/matches"
               className="text-neutral-400 hover:text-white transition-colors"
             >
-              Matchs
+              Matches
             </Link>
             <Link
               href="/teams"
               className="text-neutral-400 hover:text-white transition-colors"
             >
-              Équipes
+              Teams
             </Link>
             <Link
               href="/profile"
               className="text-neutral-400 hover:text-white transition-colors"
             >
-              Profil
+              Profile
             </Link>
           </nav>
           <div className="flex items-center gap-4">
             <span className="text-neutral-400 text-sm hidden sm:block">
-              Bonjour, <span className="text-white">{user?.username}</span>
+              Hello, <span className="text-white">{user?.username}</span>
             </span>
             <Button
               variant="outline"
@@ -139,7 +157,7 @@ export default function DashboardPage() {
               onClick={handleLogout}
               className="border-neutral-700 text-neutral-300 hover:bg-neutral-800"
             >
-              Déconnexion
+              Logout
             </Button>
           </div>
         </div>
@@ -154,10 +172,10 @@ export default function DashboardPage() {
           className="mb-8"
         >
           <h1 className="text-3xl font-bold text-white mb-2">
-            Bienvenue, {user?.username} 👋
+            Welcome, {user?.username} 👋
           </h1>
           <p className="text-neutral-400">
-            Voici un aperçu de votre activité de paris
+            Here&apos;s an overview of your betting activity
           </p>
         </motion.div>
 
@@ -192,15 +210,15 @@ export default function DashboardPage() {
           >
             <Card className="bg-gradient-to-br from-cyan-500/10 to-blue-600/10 border-cyan-500/20">
               <CardHeader>
-                <CardTitle className="text-white">🎯 Parier maintenant</CardTitle>
+                <CardTitle className="text-white">🎯 Place a Bet</CardTitle>
                 <CardDescription className="text-neutral-300">
-                  Consultez les matchs en cours et placez vos paris
+                  Check ongoing matches and place your bets
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <Link href="/matches">
                   <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700">
-                    Voir les matchs
+                    View Matches
                   </Button>
                 </Link>
               </CardContent>
@@ -214,9 +232,9 @@ export default function DashboardPage() {
           >
             <Card className="bg-gradient-to-br from-purple-500/10 to-pink-600/10 border-purple-500/20">
               <CardHeader>
-                <CardTitle className="text-white">🏆 Équipes favorites</CardTitle>
+                <CardTitle className="text-white">🏆 Favorite Teams</CardTitle>
                 <CardDescription className="text-neutral-300">
-                  Suivez vos équipes préférées et leurs performances
+                  Follow your favorite teams and their performances
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -225,7 +243,7 @@ export default function DashboardPage() {
                     variant="outline"
                     className="border-purple-500/50 text-purple-300 hover:bg-purple-500/20"
                   >
-                    Explorer les équipes
+                    Explore Teams
                   </Button>
                 </Link>
               </CardContent>
@@ -241,9 +259,9 @@ export default function DashboardPage() {
         >
           <Card className="bg-neutral-900/50 border-neutral-800">
             <CardHeader>
-              <CardTitle className="text-white">Paris récents</CardTitle>
+              <CardTitle className="text-white">Recent Bets</CardTitle>
               <CardDescription className="text-neutral-400">
-                Vos 3 derniers paris
+                Your last 3 bets
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -256,7 +274,7 @@ export default function DashboardPage() {
                     <div>
                       <p className="text-white font-medium">{bet.match}</p>
                       <p className="text-sm text-neutral-400">
-                        Pari sur {bet.team} • Cote {bet.odds}
+                        Bet on {bet.team} • Odds {bet.odds}
                       </p>
                     </div>
                     <div className="text-right">
@@ -271,10 +289,10 @@ export default function DashboardPage() {
                         }`}
                       >
                         {bet.status === "won"
-                          ? "Gagné"
+                          ? "Won"
                           : bet.status === "lost"
-                          ? "Perdu"
-                          : "En cours"}
+                          ? "Lost"
+                          : "Pending"}
                       </span>
                     </div>
                   </div>

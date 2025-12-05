@@ -9,6 +9,7 @@ import {
   Card,
   CardContent,
 } from "@/components/ui/card";
+import { matchesApi } from "@/lib/api";
 
 interface Team {
   id: string;
@@ -42,22 +43,29 @@ export default function MatchesPage() {
       return;
     }
 
-    fetch("http://localhost:3001/matches", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch");
-        return res.json();
-      })
-      .then((data) => {
-        setMatches(data);
+    const fetchMatches = async () => {
+      try {
+        const data = await matchesApi.list();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const formattedMatches: Match[] = data.map((match: any) => ({
+          id: String(match.id || ''),
+          team1: match.team1 || { id: '', name: 'TBD', tag: 'TBD' },
+          team2: match.team2 || { id: '', name: 'TBD', tag: 'TBD' },
+          game: match.game || { name: 'Unknown' },
+          matchDate: String(match.matchDate || match.startDate || new Date().toISOString()),
+          status: String(match.status || 'UPCOMING'),
+          team1Score: match.team1Score,
+          team2Score: match.team2Score,
+        }));
+        setMatches(formattedMatches);
+      } catch (error) {
+        console.error('Failed to fetch matches:', error);
+      } finally {
         setIsLoading(false);
-      })
-      .catch(() => {
-        setIsLoading(false);
-      });
+      }
+    };
+
+    fetchMatches();
   }, [router]);
 
   const handleLogout = () => {
@@ -78,19 +86,19 @@ export default function MatchesPage() {
       case "LIVE":
         return (
           <span className="px-2 py-1 rounded-full text-xs bg-red-500/20 text-red-400 animate-pulse">
-            🔴 EN DIRECT
+            🔴 LIVE
           </span>
         );
       case "UPCOMING":
         return (
           <span className="px-2 py-1 rounded-full text-xs bg-blue-500/20 text-blue-400">
-            ⏰ À venir
+            ⏰ Upcoming
           </span>
         );
       case "FINISHED":
         return (
           <span className="px-2 py-1 rounded-full text-xs bg-neutral-500/20 text-neutral-400">
-            ✓ Terminé
+            ✓ Finished
           </span>
         );
       default:
@@ -156,13 +164,13 @@ export default function MatchesPage() {
               href="/teams"
               className="text-neutral-400 hover:text-white transition-colors"
             >
-              Équipes
+              Teams
             </Link>
             <Link
               href="/profile"
               className="text-neutral-400 hover:text-white transition-colors"
             >
-              Profil
+              Profile
             </Link>
           </nav>
           <Button
@@ -171,7 +179,7 @@ export default function MatchesPage() {
             onClick={handleLogout}
             className="border-neutral-700 text-neutral-300 hover:bg-neutral-800"
           >
-            Déconnexion
+            Logout
           </Button>
         </div>
       </header>
@@ -183,19 +191,19 @@ export default function MatchesPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold text-white mb-2">Matchs 🎯</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Matches 🎯</h1>
           <p className="text-neutral-400">
-            Consultez les matchs et placez vos paris
+            Browse matches and place your bets
           </p>
         </motion.div>
 
         {/* Filters */}
         <div className="flex gap-2 mb-8 flex-wrap">
           {[
-            { key: "all", label: "Tous" },
-            { key: "live", label: "🔴 En direct" },
-            { key: "upcoming", label: "⏰ À venir" },
-            { key: "finished", label: "✓ Terminés" },
+            { key: "all", label: "All" },
+            { key: "live", label: "🔴 Live" },
+            { key: "upcoming", label: "⏰ Upcoming" },
+            { key: "finished", label: "✓ Finished" },
           ].map((f) => (
             <Button
               key={f.key}
@@ -258,7 +266,7 @@ export default function MatchesPage() {
                           VS
                         </span>
                         <p className="text-xs text-neutral-500 mt-1">
-                          {new Date(match.matchDate).toLocaleDateString("fr-FR", {
+                          {new Date(match.matchDate).toLocaleDateString("en-US", {
                             day: "numeric",
                             month: "short",
                             hour: "2-digit",
@@ -290,14 +298,14 @@ export default function MatchesPage() {
                           className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
                           disabled={match.status === "FINISHED"}
                         >
-                          Parier sur {match.team1.tag} (1.85)
+                          Bet on {match.team1.tag} (1.85)
                         </Button>
                         <Button
                           variant="outline"
                           className="flex-1 border-neutral-700 text-neutral-300 hover:bg-neutral-800"
                           disabled={match.status === "FINISHED"}
                         >
-                          Parier sur {match.team2.tag} (2.10)
+                          Bet on {match.team2.tag} (2.10)
                         </Button>
                       </div>
                     )}
