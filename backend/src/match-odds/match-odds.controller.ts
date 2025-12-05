@@ -19,7 +19,7 @@ import {
   ApiBody,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AdminGuard } from '../auth/admin.guard';
 
 @ApiTags('Match Odds')

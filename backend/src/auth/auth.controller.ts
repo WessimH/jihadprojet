@@ -1,5 +1,4 @@
 import {
-  Body,
   Controller,
   HttpCode,
   HttpStatus,
@@ -10,14 +9,18 @@ import {
   Param,
   Patch,
   Delete,
+  Body,
   ForbiddenException,
 } from '@nestjs/common';
 import type { Request } from 'express';
 import type { Session } from './auth.service';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { LocalAuthGuard } from './guards/local-auth.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { AdminGuard } from './admin.guard';
+import { Public } from './decorators/public.decorator';
+import { CurrentUser } from './decorators/current-user.decorator';
+import type { AuthenticatedUser } from './decorators/current-user.decorator';
 import {
   ApiTags,
   ApiOperation,
@@ -26,20 +29,14 @@ import {
   ApiBody,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-
-// shape of the JWT payload we attach in JwtAuthGuard
-interface AuthPayload {
-  sub?: string;
-  username?: string;
-  jti?: string;
-  isAdmin?: boolean;
-}
+import { LoginDto } from './dto/login.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Get('health')
   @ApiOperation({
     summary: 'Health check',
@@ -50,7 +47,9 @@ export class AuthController {
     return 'ok';
   }
 
-  // Public login endpoint
+  // Public login endpoint - uses LocalAuthGuard (Passport local strategy)
+  @Public()
+  @UseGuards(LocalAuthGuard)
   @HttpCode(HttpStatus.OK)
   @Post('login')
   @ApiOperation({
@@ -64,16 +63,14 @@ export class AuthController {
     description: 'Login successful, returns access_token.',
   })
   @ApiResponse({ status: 401, description: 'Invalid credentials.' })
-  async login(@Body() body: LoginDto) {
-    // coerce incoming DTO properties to strings to satisfy strict lint rules
-    const username = body.username;
-    const password = body.password;
-
-    const user = await this.authService.validateUser(username, password);
-    if (!user) {
-      return { error: 'invalid_credentials' };
-    }
-    return this.authService.login(user);
+  login(
+    @Req()
+    req: Request & {
+      user: { id: string; username: string; isAdmin?: boolean };
+    },
+  ) {
+    // LocalAuthGuard validates credentials and attaches user to req.user
+    return this.authService.login(req.user);
   }
 
   // Example protected route to test the guard
@@ -86,9 +83,9 @@ export class AuthController {
   })
   @ApiResponse({ status: 200, description: 'User profile.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  profile(@Req() req: Request & { user?: unknown }) {
+  profile(@CurrentUser() user: AuthenticatedUser) {
     // JwtAuthGuard attaches the token payload to req.user
-    return { user: req.user };
+    return { user };
   }
 
   // Session CRUD (protected) - endpoints under /auth/login
@@ -101,8 +98,8 @@ export class AuthController {
   })
   @ApiResponse({ status: 200, description: 'List of sessions.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  listSessions(@Req() req: Request & { user?: AuthPayload }) {
-    const userId = req.user?.sub as string;
+  listSessions(@CurrentUser() user: AuthenticatedUser) {
+    const userId = user.sub;
     const sessions = this.authService.listSessions();
     return sessions.filter((s) => s.userId === userId);
   }
@@ -122,14 +119,11 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Session details.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
-  getSession(
-    @Req() req: Request & { user?: AuthPayload },
-    @Param('id') id: string,
-  ) {
-    const userId = req.user?.sub as string;
+  getSession(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
+    const userId = user.sub;
     const session = this.authService.getSession(id);
     if (!session) return { error: 'not_found' };
-    if (session.userId !== userId && !req.user?.isAdmin) {
+    if (session.userId !== userId && !user.isAdmin) {
       throw new ForbiddenException();
     }
     return session;
@@ -157,14 +151,14 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   updateSession(
-    @Req() req: Request & { user?: AuthPayload },
+    @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
     @Body() patch: Partial<Session>,
   ) {
-    const userId = req.user?.sub as string;
+    const userId = user.sub;
     const session = this.authService.getSession(id);
     if (!session) return { error: 'not_found' };
-    if (session.userId !== userId && !req.user?.isAdmin) {
+    if (session.userId !== userId && !user.isAdmin) {
       throw new ForbiddenException();
     }
 
@@ -188,13 +182,13 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   deleteSession(
-    @Req() req: Request & { user?: AuthPayload },
+    @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
   ) {
-    const userId = req.user?.sub as string;
+    const userId = user.sub;
     const session = this.authService.getSession(id);
     if (!session) return { error: 'not_found' };
-    if (session.userId !== userId && !req.user?.isAdmin) {
+    if (session.userId !== userId && !user.isAdmin) {
       throw new ForbiddenException();
     }
     const ok = this.authService.deleteSession(id);

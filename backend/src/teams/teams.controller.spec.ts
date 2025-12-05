@@ -2,19 +2,15 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { TeamsController } from './teams.controller';
 import { TeamsService } from './teams.service';
-import { JwtService } from '@nestjs/jwt';
-import { AuthService } from '../auth/auth.service';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { Team } from './entities/team.entity';
 
-const jwtServiceMock = {
-  verifyAsync: jest.fn().mockResolvedValue({ sub: 'u1', jti: 's1' }),
-};
-const authServiceMock = {
-  getSession: jest.fn().mockReturnValue({
-    id: 's1',
-    userId: 'u1',
-    username: 'u1',
-    createdAt: new Date(),
-  }),
+const mockTeamsService = {
+  create: jest.fn(),
+  findAll: jest.fn().mockResolvedValue([]),
+  findOne: jest.fn(),
+  update: jest.fn(),
+  remove: jest.fn(),
 };
 
 describe('TeamsController', () => {
@@ -24,9 +20,8 @@ describe('TeamsController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [TeamsController],
       providers: [
-        TeamsService,
-        { provide: JwtService, useValue: jwtServiceMock },
-        { provide: AuthService, useValue: authServiceMock },
+        { provide: TeamsService, useValue: mockTeamsService },
+        { provide: getRepositoryToken(Team), useValue: {} },
       ],
     }).compile();
 
@@ -35,5 +30,12 @@ describe('TeamsController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  describe('findAll', () => {
+    it('should return an array of teams', async () => {
+      const result = await controller.findAll();
+      expect(Array.isArray(result)).toBe(true);
+    });
   });
 });

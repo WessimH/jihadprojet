@@ -10,7 +10,7 @@ import {
   ParseUUIDPipe,
   UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AdminGuard } from '../auth/admin.guard';
 import { TeamsService } from './teams.service';
 import { CreateTeamDto } from './dto/create-team.dto';

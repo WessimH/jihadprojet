@@ -2,28 +2,13 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { MatchOddsController } from './match-odds.controller';
 import { MatchOddsService } from './match-odds.service';
-import { JwtService } from '@nestjs/jwt';
-import { AuthService } from '../auth/auth.service';
-
-const jwtServiceMock = {
-  verifyAsync: jest.fn().mockResolvedValue({ sub: 'u1' }),
-};
 
 const matchOddsServiceMock = {
   create: jest.fn(),
-  findAll: jest.fn(),
+  findAll: jest.fn().mockResolvedValue([]),
   findOne: jest.fn(),
   update: jest.fn(),
   remove: jest.fn(),
-};
-
-const authServiceMock = {
-  getSession: jest.fn().mockReturnValue({
-    id: 's1',
-    userId: 'u1',
-    username: 'u1',
-    createdAt: new Date(),
-  }),
 };
 
 describe('MatchOddsController', () => {
@@ -34,8 +19,6 @@ describe('MatchOddsController', () => {
       controllers: [MatchOddsController],
       providers: [
         { provide: MatchOddsService, useValue: matchOddsServiceMock },
-        { provide: JwtService, useValue: jwtServiceMock },
-        { provide: AuthService, useValue: authServiceMock },
       ],
     }).compile();
 
@@ -44,5 +27,12 @@ describe('MatchOddsController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  describe('findAll', () => {
+    it('should return an array of odds', async () => {
+      const result = await controller.findAll();
+      expect(Array.isArray(result)).toBe(true);
+    });
   });
 });

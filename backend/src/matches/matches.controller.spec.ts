@@ -2,19 +2,13 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { MatchesController } from './matches.controller';
 import { MatchesService } from './matches.service';
-import { JwtService } from '@nestjs/jwt';
-import { AuthService } from '../auth/auth.service';
 
-const jwtServiceMock = {
-  verifyAsync: jest.fn().mockResolvedValue({ sub: 'u1', jti: 's1' }),
-};
-const authServiceMock = {
-  getSession: jest.fn().mockReturnValue({
-    id: 's1',
-    userId: 'u1',
-    username: 'u1',
-    createdAt: new Date(),
-  }),
+const mockMatchesService = {
+  create: jest.fn(),
+  findAll: jest.fn().mockResolvedValue([]),
+  findOne: jest.fn(),
+  update: jest.fn(),
+  remove: jest.fn(),
 };
 
 describe('MatchesController', () => {
@@ -23,11 +17,7 @@ describe('MatchesController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [MatchesController],
-      providers: [
-        MatchesService,
-        { provide: JwtService, useValue: jwtServiceMock },
-        { provide: AuthService, useValue: authServiceMock },
-      ],
+      providers: [{ provide: MatchesService, useValue: mockMatchesService }],
     }).compile();
 
     controller = module.get<MatchesController>(MatchesController);
@@ -35,5 +25,12 @@ describe('MatchesController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  describe('findAll', () => {
+    it('should return an array of matches', async () => {
+      const result = await controller.findAll();
+      expect(Array.isArray(result)).toBe(true);
+    });
   });
 });
