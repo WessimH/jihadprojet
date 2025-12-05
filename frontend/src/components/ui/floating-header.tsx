@@ -28,13 +28,13 @@ export function FloatingHeader() {
 	];
 
 	return (
-		<header
-			className={cn(
-				'sticky top-5 z-50',
-				'mx-auto w-full max-w-3xl rounded-lg border shadow',
-				'bg-background/95 supports-[backdrop-filter]:bg-background/80 backdrop-blur-lg',
-			)}
-		>
+		<div className="fixed top-0 left-0 right-0 z-[100] pt-4 px-4">
+			<header
+				className={cn(
+					'mx-auto w-full max-w-3xl rounded-lg border shadow',
+					'bg-background/95 supports-[backdrop-filter]:bg-background/80 backdrop-blur-lg',
+				)}
+			>
 			<nav className="mx-auto flex items-center justify-between p-1.5">
 				<Link href="/" className="hover:bg-accent flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 duration-100">
 					<Gamepad2Icon className="size-5" />
@@ -100,5 +100,6 @@ export function FloatingHeader() {
 				</div>
 			</nav>
 		</header>
+		</div>
 	);
 }

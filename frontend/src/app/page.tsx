@@ -20,7 +20,7 @@ export default function Home() {
       {/* Hero Content */}
       <div className="relative z-10">
         <HeroGeometric 
-          badge="Esports Betting"
+          badge=""
           title1="Bet on Your"
           title2="Favorite Teams"
         />
