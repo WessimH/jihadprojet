@@ -1,3 +1,5 @@
+#troll file 
+
 {
   description = "Esports Betting Application - NestJS Backend + Next.js Frontend";
 
