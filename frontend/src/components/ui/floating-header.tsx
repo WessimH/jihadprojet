@@ -53,7 +53,10 @@ export function FloatingHeader() {
 				</div>
 				<div className="flex items-center gap-2">
 					<Link href="/login">
-						<Button size="sm">Login</Button>
+						<Button size="sm" variant="ghost">Login</Button>
+					</Link>
+					<Link href="/signup" className="hidden lg:block">
+						<Button size="sm">Sign Up</Button>
 					</Link>
 					<Sheet open={open} onOpenChange={setOpen}>
 						<Button
