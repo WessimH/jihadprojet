@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/card";
 import { BeamsBackground } from "@/components/ui/beams-background";
 import { FloatingHeader } from "@/components/ui/floating-header";
-import { usersApi, ApiError } from "@/lib/api";
+import { signupAction } from "@/lib/auth-actions";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -41,23 +41,20 @@ export default function SignUpPage() {
       return;
     }
 
-    try {
-      await usersApi.create({
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-      });
-      
-      router.push("/login?registered=true");
-    } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message);
-      } else {
-        setError("Connection error. Please try again.");
-      }
-    } finally {
-      setIsLoading(false);
+    const result = await signupAction(
+      formData.username,
+      formData.email,
+      formData.password
+    );
+
+    if (result.success) {
+      router.push("/dashboard");
+      router.refresh();
+    } else {
+      setError(result.error || "Registration failed");
     }
+    
+    setIsLoading(false);
   };
 
   return (

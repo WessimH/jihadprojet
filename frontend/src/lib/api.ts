@@ -16,13 +16,11 @@ export class ApiError extends Error {
 async function fetchApi<T>(endpoint: string, options: ApiOptions = {}): Promise<T> {
   const { method = 'GET', body, headers = {} } = options;
   
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-  
   const config: RequestInit = {
     method,
+    credentials: 'include', // Send cookies with requests
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
   };

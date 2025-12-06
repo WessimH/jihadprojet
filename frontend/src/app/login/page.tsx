@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/card";
 import { BeamsBackground } from "@/components/ui/beams-background";
 import { FloatingHeader } from "@/components/ui/floating-header";
-import { authApi, ApiError } from "@/lib/api";
+import { loginAction } from "@/lib/auth-actions";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,24 +33,16 @@ export default function LoginPage() {
     setIsLoading(true);
     setError("");
 
-    try {
-      const data = await authApi.login(formData.username, formData.password);
-      
-      if (data.access_token) {
-        localStorage.setItem("token", data.access_token);
-        router.push("/dashboard");
-      } else {
-        setError("Invalid credentials");
-      }
-    } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message);
-      } else {
-        setError("Connection error. Please try again.");
-      }
-    } finally {
-      setIsLoading(false);
+    const result = await loginAction(formData.username, formData.password);
+    
+    if (result.success) {
+      router.push("/dashboard");
+      router.refresh();
+    } else {
+      setError(result.error || "Invalid credentials");
     }
+    
+    setIsLoading(false);
   };
 
   return (
