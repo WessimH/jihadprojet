@@ -92,4 +92,9 @@ export class AuthService {
   deleteSession(id: string): boolean {
     return this.sessions.delete(id);
   }
+
+  // Get user with balance from database
+  getUserWithBalance(userId: string) {
+    return this.usersService.findOne(userId);
+  }
 }

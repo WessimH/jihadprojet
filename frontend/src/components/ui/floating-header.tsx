@@ -1,12 +1,25 @@
+'use client';
+
 import React from 'react';
-import { Gamepad2Icon, MenuIcon } from 'lucide-react';
+import { Gamepad2Icon, MenuIcon, LogOutIcon } from 'lucide-react';
 import { Sheet, SheetContent, SheetFooter } from '@/components/ui/sheet';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { logoutAction } from '@/lib/auth-actions';
 
-export function FloatingHeader() {
+interface FloatingHeaderProps {
+	isAuthenticated?: boolean;
+	username?: string;
+	isAdmin?: boolean;
+}
+
+export function FloatingHeader({ isAuthenticated = false, username, isAdmin = false }: FloatingHeaderProps) {
 	const [open, setOpen] = React.useState(false);
+
+	const handleLogout = async () => {
+		await logoutAction();
+	};
 
 	const links = [
 		{
@@ -25,6 +38,10 @@ export function FloatingHeader() {
 			label: 'Profile',
 			href: '/profile',
 		},
+		...(isAdmin ? [{
+			label: 'Admin',
+			href: '/admin',
+		}] : []),
 	];
 
 	return (
@@ -52,12 +69,31 @@ export function FloatingHeader() {
 					))}
 				</div>
 				<div className="flex items-center gap-2">
-					<Link href="/login">
-						<Button size="sm" variant="ghost">Login</Button>
-					</Link>
-					<Link href="/signup" className="hidden lg:block">
-						<Button size="sm">Sign Up</Button>
-					</Link>
+					{isAuthenticated ? (
+						<>
+							<span className="hidden lg:block text-sm text-muted-foreground">
+								{username}
+							</span>
+							<Button 
+								size="sm" 
+								variant="destructive"
+								onClick={handleLogout}
+								className="bg-red-600 hover:bg-red-700 text-white"
+							>
+								<LogOutIcon className="size-4 mr-1" />
+								Logout
+							</Button>
+						</>
+					) : (
+						<>
+							<Link href="/login">
+								<Button size="sm" variant="ghost">Login</Button>
+							</Link>
+							<Link href="/signup" className="hidden lg:block">
+								<Button size="sm">Sign Up</Button>
+							</Link>
+						</>
+					)}
 					<Sheet open={open} onOpenChange={setOpen}>
 						<Button
 							size="icon"
@@ -88,12 +124,28 @@ export function FloatingHeader() {
 								))}
 							</div>
 							<SheetFooter>
-								<Link href="/login" className="w-full">
-									<Button variant="outline" className="w-full">Login</Button>
-								</Link>
-								<Link href="/signup" className="w-full">
-									<Button className="w-full">Sign Up</Button>
-								</Link>
+								{isAuthenticated ? (
+									<Button 
+										variant="destructive" 
+										className="w-full bg-red-600 hover:bg-red-700"
+										onClick={() => {
+											setOpen(false);
+											handleLogout();
+										}}
+									>
+										<LogOutIcon className="size-4 mr-2" />
+										Logout
+									</Button>
+								) : (
+									<>
+										<Link href="/login" className="w-full">
+											<Button variant="outline" className="w-full">Login</Button>
+										</Link>
+										<Link href="/signup" className="w-full">
+											<Button className="w-full">Sign Up</Button>
+										</Link>
+									</>
+								)}
 							</SheetFooter>
 						</SheetContent>
 					</Sheet>

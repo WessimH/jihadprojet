@@ -18,26 +18,14 @@ interface Team {
 
 interface TeamsClientProps {
   teams: Team[];
+  isAuthenticated?: boolean;
+  username?: string;
 }
 
-export function TeamsClient({ teams }: TeamsClientProps) {
+export function TeamsClient({ teams, isAuthenticated = false, username }: TeamsClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Demo data if no teams
-  const demoTeams: Team[] = [
-    { id: "1", name: "Team Liquid", tag: "TL", region: "NA", winRate: 72 },
-    { id: "2", name: "G2 Esports", tag: "G2", region: "EU", winRate: 68 },
-    { id: "3", name: "Fnatic", tag: "FNC", region: "EU", winRate: 65 },
-    { id: "4", name: "Cloud9", tag: "C9", region: "NA", winRate: 61 },
-    { id: "5", name: "T1", tag: "T1", region: "KR", winRate: 78 },
-    { id: "6", name: "Gen.G", tag: "GEN", region: "KR", winRate: 75 },
-    { id: "7", name: "NaVi", tag: "NAVI", region: "EU", winRate: 70 },
-    { id: "8", name: "FaZe Clan", tag: "FAZE", region: "EU", winRate: 67 },
-  ];
-
-  const displayTeams = teams.length > 0 ? teams : demoTeams;
-
-  const filteredTeams = displayTeams.filter(
+  const filteredTeams = teams.filter(
     (team) =>
       team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       team.tag.toLowerCase().includes(searchQuery.toLowerCase())
@@ -67,7 +55,7 @@ export function TeamsClient({ teams }: TeamsClientProps) {
 
       {/* Header */}
       <div className="relative z-50">
-        <FloatingHeader />
+        <FloatingHeader isAuthenticated={isAuthenticated} username={username} />
       </div>
 
       {/* Main Content */}

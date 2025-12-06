@@ -1,4 +1,4 @@
-import { serverTeamsApi, ApiError } from "@/lib/server-api";
+import { serverTeamsApi, serverAuthApi, ApiError } from "@/lib/server-api";
 import { TeamsClient } from "./teams-client";
 
 interface Team {
@@ -7,6 +7,10 @@ interface Team {
   tag: string;
   region?: string;
   winRate?: number;
+}
+
+interface User {
+  username: string;
 }
 
 async function getTeamsData() {
@@ -29,8 +33,20 @@ async function getTeamsData() {
   }
 }
 
+async function getAuthData() {
+  try {
+    const user = await serverAuthApi.getProfile();
+    return user as unknown as User;
+  } catch {
+    return null;
+  }
+}
+
 export default async function TeamsPage() {
-  const teams = await getTeamsData();
+  const [teams, user] = await Promise.all([
+    getTeamsData(),
+    getAuthData(),
+  ]);
   
   if (teams === null) {
     return (
@@ -40,5 +56,5 @@ export default async function TeamsPage() {
     );
   }
 
-  return <TeamsClient teams={teams} />;
+  return <TeamsClient teams={teams} isAuthenticated={!!user} username={user?.username} />;
 }

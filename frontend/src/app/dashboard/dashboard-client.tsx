@@ -12,13 +12,13 @@ import {
 } from "@/components/ui/card";
 import { BeamsBackground } from "@/components/ui/beams-background";
 import { FloatingHeader } from "@/components/ui/floating-header";
-import { logoutAction } from "@/lib/auth-actions";
 
 interface User {
   sub: string;
   username: string;
   email?: string;
   isAdmin?: boolean;
+  balance?: number;
 }
 
 interface Bet {
@@ -36,46 +36,20 @@ interface DashboardClientProps {
 }
 
 export function DashboardClient({ user, bets }: DashboardClientProps) {
-  const handleLogout = async () => {
-    await logoutAction();
-  };
-
   const stats = [
     { label: "Active Bets", value: String(bets.filter(b => b.status === 'PENDING').length || 0), icon: "🎯" },
     { label: "Won Bets", value: String(bets.filter(b => b.status === 'WON').length || 0), icon: "🏆" },
-    { label: "Balance", value: "$150", icon: "💰" },
+    { label: "Balance", value: `$${user.balance?.toFixed(2) || '0.00'}`, icon: "💰" },
     { label: "Win Rate", value: bets.length > 0 ? `${Math.round((bets.filter(b => b.status === 'WON').length / bets.length) * 100)}%` : "0%", icon: "📈" },
   ];
 
-  const recentBets = bets.length > 0 ? bets.slice(0, 3).map(bet => ({
+  const recentBets = bets.slice(0, 3).map(bet => ({
     match: bet.match ? `${bet.match.team1?.name || 'TBD'} vs ${bet.match.team2?.name || 'TBD'}` : 'Unknown Match',
     team: bet.selectedTeam?.name || 'Unknown',
     amount: `$${bet.amount}`,
     odds: String(bet.odds),
     status: bet.status?.toLowerCase() || 'pending',
-  })) : [
-    {
-      match: "Team Liquid vs G2",
-      team: "Team Liquid",
-      amount: "$25",
-      odds: "1.85",
-      status: "pending",
-    },
-    {
-      match: "Fnatic vs Cloud9",
-      team: "Fnatic",
-      amount: "$50",
-      odds: "2.10",
-      status: "won",
-    },
-    {
-      match: "T1 vs Gen.G",
-      team: "T1",
-      amount: "$30",
-      odds: "1.65",
-      status: "lost",
-    },
-  ];
+  }));
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-neutral-950">
@@ -86,7 +60,7 @@ export function DashboardClient({ user, bets }: DashboardClientProps) {
 
       {/* Header */}
       <div className="relative z-50">
-        <FloatingHeader />
+        <FloatingHeader isAuthenticated={true} username={user?.username} isAdmin={user?.isAdmin} />
       </div>
 
       {/* Main Content */}
@@ -103,14 +77,6 @@ export function DashboardClient({ user, bets }: DashboardClientProps) {
           <p className="text-neutral-400">
             Here&apos;s an overview of your betting activity
           </p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleLogout}
-            className="mt-4 border-neutral-700 text-neutral-300 hover:bg-neutral-800"
-          >
-            Logout
-          </Button>
         </motion.div>
 
         {/* Stats Grid */}

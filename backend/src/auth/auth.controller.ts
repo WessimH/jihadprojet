@@ -83,9 +83,15 @@ export class AuthController {
   })
   @ApiResponse({ status: 200, description: 'User profile.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  profile(@CurrentUser() user: AuthenticatedUser) {
+  async profile(@CurrentUser() user: AuthenticatedUser) {
     // JwtAuthGuard attaches the token payload to req.user
-    return { user };
+    // Fetch user from database to get balance
+    const fullUser = await this.authService.getUserWithBalance(user.sub);
+    return {
+      ...user,
+      balance: fullUser?.balance || 0,
+      email: fullUser?.email,
+    };
   }
 
   // Session CRUD (protected) - endpoints under /auth/login

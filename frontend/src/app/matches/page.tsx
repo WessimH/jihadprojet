@@ -1,4 +1,4 @@
-import { serverMatchesApi, ApiError } from "@/lib/server-api";
+import { serverMatchesApi, serverAuthApi, ApiError } from "@/lib/server-api";
 import { MatchesClient } from "./matches-client";
 
 interface Team {
@@ -16,6 +16,10 @@ interface Match {
   status: string;
   team1Score?: number;
   team2Score?: number;
+}
+
+interface User {
+  username: string;
 }
 
 async function getMatchesData() {
@@ -41,8 +45,20 @@ async function getMatchesData() {
   }
 }
 
+async function getAuthData() {
+  try {
+    const user = await serverAuthApi.getProfile();
+    return user as unknown as User;
+  } catch {
+    return null;
+  }
+}
+
 export default async function MatchesPage() {
-  const matches = await getMatchesData();
+  const [matches, user] = await Promise.all([
+    getMatchesData(),
+    getAuthData(),
+  ]);
   
   if (matches === null) {
     return (
@@ -52,5 +68,5 @@ export default async function MatchesPage() {
     );
   }
 
-  return <MatchesClient matches={matches} />;
+  return <MatchesClient matches={matches} isAuthenticated={!!user} username={user?.username} />;
 }

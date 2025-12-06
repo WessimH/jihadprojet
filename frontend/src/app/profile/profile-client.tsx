@@ -65,47 +65,14 @@ export function ProfileClient({ user: initialUser, bets }: ProfileClientProps) {
     }
   };
 
-  const betHistory = bets.length > 0 ? bets.map(bet => ({
+  const betHistory = bets.map(bet => ({
     id: bet.id,
     match: bet.match ? `${bet.match.team1?.name || 'TBD'} vs ${bet.match.team2?.name || 'TBD'}` : 'Unknown Match',
     amount: bet.amount,
     odds: bet.odds,
     result: bet.status?.toLowerCase() || 'pending',
     profit: bet.profit || 0,
-  })) : [
-    {
-      id: "1",
-      match: "Team Liquid vs G2 Esports",
-      amount: 50,
-      odds: 1.85,
-      result: "win",
-      profit: 42.5,
-    },
-    {
-      id: "2",
-      match: "Fnatic vs Cloud9",
-      amount: 30,
-      odds: 2.1,
-      result: "loss",
-      profit: -30,
-    },
-    {
-      id: "3",
-      match: "T1 vs Gen.G",
-      amount: 100,
-      odds: 1.65,
-      result: "win",
-      profit: 65,
-    },
-    {
-      id: "4",
-      match: "NaVi vs FaZe",
-      amount: 25,
-      odds: 2.35,
-      result: "pending",
-      profit: 0,
-    },
-  ];
+  }));
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-neutral-950">
@@ -116,7 +83,7 @@ export function ProfileClient({ user: initialUser, bets }: ProfileClientProps) {
 
       {/* Header */}
       <div className="relative z-50">
-        <FloatingHeader />
+        <FloatingHeader isAuthenticated={true} username={user.username} />
       </div>
 
       {/* Main Content */}
@@ -134,7 +101,7 @@ export function ProfileClient({ user: initialUser, bets }: ProfileClientProps) {
             variant="outline"
             size="sm"
             onClick={handleLogout}
-            className="mt-4 border-neutral-700 text-neutral-300 hover:bg-neutral-800"
+            className="mt-4 bg-red-500 hover:bg-red-600 border-red-500 text-white"
           >
             Logout
           </Button>
