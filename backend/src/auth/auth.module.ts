@@ -10,13 +10,16 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { AdminGuard } from './admin.guard';
 
+// Use a consistent secret - in production, use environment variable
+export const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
+
 @Module({
   imports: [
     UsersModule,
     PassportModule,
     JwtModule.register({
       global: true,
-      secret: process.env.JWT_SECRET ?? 'placeholder',
+      secret: JWT_SECRET,
       signOptions: { expiresIn: '1d' },
     }),
   ],

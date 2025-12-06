@@ -1,7 +1,8 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from '../auth.service';
+import { JWT_SECRET } from '../auth.module';
 
 export interface JwtPayload {
   sub: string;
@@ -14,17 +15,24 @@ export interface JwtPayload {
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
+  private readonly logger = new Logger(JwtStrategy.name);
+
   constructor(private authService: AuthService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET ?? 'placeholder',
+      secretOrKey: JWT_SECRET,
     });
+    this.logger.log('JwtStrategy initialized');
   }
 
   validate(payload: JwtPayload) {
+    this.logger.log(`Validating token with jti: ${payload.jti}`);
     // Vérifier que la session existe (pour la révocation de tokens)
     const session = this.authService.getSession(payload.jti);
+    this.logger.log(
+      `Session lookup result: ${session ? 'found' : 'NOT FOUND'}`,
+    );
     if (!session) {
       throw new UnauthorizedException('Token has been revoked');
     }

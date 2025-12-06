@@ -97,6 +97,9 @@ export class UsersService {
     }
     if (updateUserDto.email) existing.email = updateUserDto.email;
     if (updateUserDto.username) existing.username = updateUserDto.username;
+    if (typeof updateUserDto.isAdmin !== 'undefined') {
+      existing.isAdmin = updateUserDto.isAdmin;
+    }
 
     try {
       return await this.repo.save(existing);

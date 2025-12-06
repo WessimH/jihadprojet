@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { randomUUID } from 'crypto';
 import { UsersService } from '../users/users.service';
@@ -15,6 +15,7 @@ export type Session = {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   // in-memory session store (jti -> session). For production use a persistent store.
   private readonly sessions = new Map<string, Session>();
 
@@ -59,6 +60,9 @@ export class AuthService {
       createdAt: new Date(),
     };
     this.sessions.set(jti, session);
+    this.logger.log(
+      `Session created: jti=${jti}, total sessions=${this.sessions.size}`,
+    );
 
     return { access_token: accessToken, jti };
   }
@@ -69,7 +73,11 @@ export class AuthService {
   }
 
   getSession(id: string): Session | undefined {
-    return this.sessions.get(id);
+    const session = this.sessions.get(id);
+    this.logger.log(
+      `getSession called: jti=${id}, found=${!!session}, total sessions=${this.sessions.size}`,
+    );
+    return session;
   }
 
   // update session metadata (e.g., renew createdAt or set flags)

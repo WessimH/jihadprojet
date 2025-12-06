@@ -8,6 +8,7 @@ import {
   MaxLength,
   IsNumber,
   Min,
+  IsBoolean,
 } from 'class-validator';
 
 export class CreateUserDto {
@@ -44,4 +45,9 @@ export class CreateUserDto {
   @IsNumber()
   @Min(0)
   balance?: number;
+
+  @ApiProperty({ example: false, required: false, description: 'Admin flag' })
+  @IsOptional()
+  @IsBoolean()
+  isAdmin?: boolean;
 }
