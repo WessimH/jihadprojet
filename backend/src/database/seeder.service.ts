@@ -89,12 +89,12 @@ export class SeederService implements OnModuleInit {
 
   private async seedTeams() {
     const defaultTeams = [
-      { name: 'Team Liquid', tag: 'TL', country: 'US' },
-      { name: 'G2 Esports', tag: 'G2', country: 'EU' },
-      { name: 'Fnatic', tag: 'FNC', country: 'EU' },
-      { name: 'Cloud9', tag: 'C9', country: 'US' },
-      { name: 'T1', tag: 'T1', country: 'KR' },
-      { name: 'Gen.G', tag: 'GEN', country: 'KR' },
+      { name: 'Team Liquid', tag: 'TL', country: 'US', totalEarnings: 0 },
+      { name: 'G2 Esports', tag: 'G2', country: 'EU', totalEarnings: 0 },
+      { name: 'Fnatic', tag: 'FNC', country: 'EU', totalEarnings: 0 },
+      { name: 'Cloud9', tag: 'C9', country: 'US', totalEarnings: 0 },
+      { name: 'T1', tag: 'T1', country: 'KR', totalEarnings: 0 },
+      { name: 'Gen.G', tag: 'GEN', country: 'KR', totalEarnings: 0 },
     ];
 
     for (const teamData of defaultTeams) {
