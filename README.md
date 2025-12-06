@@ -93,6 +93,59 @@ This project is a betting esport application made for Andy Ciqnuin's class
 
 #### Stack explanation 
 I chose NestJS because it enables rapid development; its performant TypeORM helps me implement features faster, and its strict structure helps me organize the backend. For the backend architecture, I chose a domain-driven (métier) approach.
+
+### Architecture Overview
+
+#### Global Architecture
+
+The application follows a **client-server architecture** with three main components:
+
+1. **Frontend (Next.js 16)** - A modern React application using the App Router with Server Components. It handles all user interactions, routing, and communicates with the backend API.
+
+2. **Backend (NestJS)** - A REST API built with NestJS following domain-driven design. It manages business logic, authentication, and database operations through TypeORM.
+
+3. **Database (PostgreSQL)** - Stores all application data including users, teams, matches, bets, and games.
+
+#### Authentication Flow
+
+Authentication uses **JWT tokens stored in HTTP-only cookies** for security:
+
+1. User submits credentials → Backend validates and returns JWT token
+2. Token is stored as an HTTP-only cookie (not accessible via JavaScript)
+3. All subsequent requests include the cookie automatically
+4. Backend validates the token on protected endpoints
+
+#### Next.js Proxy (Route Protection)
+
+The frontend uses **Next.js 16 Proxy** (formerly called Middleware) to protect routes at the edge, before any page rendering occurs.
+
+**What it does:**
+- Runs on the server before every request reaches your application
+- Checks if the user has a valid authentication token (cookie)
+- Redirects unauthenticated users away from protected pages
+- Redirects authenticated users away from login/signup pages
+
+**Protected routes:** `/dashboard`, `/profile`, `/teams`, `/matches`
+
+**Why use Proxy instead of client-side checks?**
+- **Security**: Protection happens server-side, users never see protected content flash
+- **Performance**: Invalid requests are redirected before page rendering starts
+- **SEO**: Search engines don't index protected content accidentally
+
+#### Data Flow
+
+```
+User → Next.js Proxy → Next.js Server Components → NestJS API → PostgreSQL
+                ↓
+        (Redirects if not authenticated)
+```
+
+For authenticated requests:
+1. **Proxy** checks the token cookie exists
+2. **Server Components** fetch data from the API with the token
+3. **NestJS** validates the token and returns data
+4. **React** renders the page with the fetched data
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
