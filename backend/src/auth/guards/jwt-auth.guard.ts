@@ -17,7 +17,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   }
 
   canActivate(context: ExecutionContext) {
-    // Vérifier si la route est marquée comme publique
+    // Check if the route is marked as public
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -33,8 +33,10 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     user: TUser | false,
     info: Error | null,
   ): TUser {
-    this.logger.log(`handleRequest - err: ${err}, user: ${!!user}, info: ${info}`);
-    // Vous pouvez lancer une exception sur la base des arguments "info" ou "err"
+    this.logger.log(
+      `handleRequest - err: ${err}, user: ${!!user}, info: ${info}`,
+    );
+    // You can throw an exception based on the "info" or "err" arguments
     if (err || !user) {
       this.logger.error(`Auth failed - err: ${err?.message}, info: ${info}`);
       throw err || new UnauthorizedException('Invalid or expired token');

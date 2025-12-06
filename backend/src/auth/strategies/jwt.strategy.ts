@@ -28,7 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   validate(payload: JwtPayload) {
     this.logger.log(`Validating token with jti: ${payload.jti}`);
-    // Vérifier que la session existe (pour la révocation de tokens)
+    // Check that the session exists (for token revocation)
     const session = this.authService.getSession(payload.jti);
     this.logger.log(
       `Session lookup result: ${session ? 'found' : 'NOT FOUND'}`,
@@ -37,7 +37,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Token has been revoked');
     }
 
-    // Retourner l'utilisateur qui sera attaché à req.user
+    // Return the user that will be attached to req.user
     return {
       userId: payload.sub,
       username: payload.username,

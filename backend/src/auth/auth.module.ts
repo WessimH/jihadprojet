@@ -11,7 +11,8 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 import { AdminGuard } from './admin.guard';
 
 // Use a consistent secret - in production, use environment variable
-export const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
+export const JWT_SECRET =
+  process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
 
 @Module({
   imports: [
