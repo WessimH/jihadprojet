@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { BeamsBackground } from "@/components/ui/beams-background";
+import { FloatingHeader } from "@/components/ui/floating-header";
 import { teamsApi } from "@/lib/api";
 
 interface Team {
@@ -52,12 +53,7 @@ export default function TeamsPage() {
     fetchTeams();
   }, [router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    router.push("/");
-  };
-
-  // Demo data si pas d'équipes
+  // Demo data if no teams
   const demoTeams: Team[] = [
     { id: "1", name: "Team Liquid", tag: "TL", region: "NA", winRate: 72 },
     { id: "2", name: "G2 Esports", tag: "G2", region: "EU", winRate: 68 },
@@ -93,50 +89,19 @@ export default function TeamsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-950">
+    <div className="relative min-h-screen w-full overflow-hidden bg-neutral-950">
+      {/* Beams Background */}
+      <div className="absolute inset-0 z-0">
+        <BeamsBackground className="absolute inset-0" />
+      </div>
+
       {/* Header */}
-      <header className="border-b border-neutral-800 bg-neutral-900/50 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-2xl">🎮</span>
-            <span className="font-bold text-white text-lg">Esports Betting</span>
-          </Link>
-          <nav className="hidden md:flex items-center gap-6">
-            <Link
-              href="/dashboard"
-              className="text-neutral-400 hover:text-white transition-colors"
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/matches"
-              className="text-neutral-400 hover:text-white transition-colors"
-            >
-              Matches
-            </Link>
-            <Link href="/teams" className="text-cyan-400 font-medium">
-              Teams
-            </Link>
-            <Link
-              href="/profile"
-              className="text-neutral-400 hover:text-white transition-colors"
-            >
-              Profile
-            </Link>
-          </nav>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleLogout}
-            className="border-neutral-700 text-neutral-300 hover:bg-neutral-800"
-          >
-            Logout
-          </Button>
-        </div>
-      </header>
+      <div className="relative z-50">
+        <FloatingHeader />
+      </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 py-8 pt-24">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

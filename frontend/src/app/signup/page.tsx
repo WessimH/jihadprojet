@@ -16,6 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { BeamsBackground } from "@/components/ui/beams-background";
+import { FloatingHeader } from "@/components/ui/floating-header";
 import { usersApi, ApiError } from "@/lib/api";
 
 export default function SignUpPage() {
@@ -65,7 +66,11 @@ export default function SignUpPage() {
         <BeamsBackground className="absolute inset-0" />
       </div>
 
-      <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-8">
+      <div className="relative z-50">
+        <FloatingHeader />
+      </div>
+
+      <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-8 pt-24">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
