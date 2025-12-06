@@ -103,7 +103,66 @@ I chose NestJS because it enables rapid development; its performant TypeORM help
 This is an example of how you may give instructions on setting up your project locally.
 To get a local copy up and running follow these simple example steps.
 
-### Prerequisites
+### 🐳 Quick Start with Docker (Recommended)
+
+The easiest way to run the entire application is with Docker Compose:
+
+```sh
+# Clone the repository
+git clone https://github.com/WessimH/jihadprojet.git
+cd jihadprojet
+
+# Start all services (database, backend, frontend)
+docker compose up
+
+# Or build fresh images
+docker compose up --build
+```
+
+That's it! The application will be available at:
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:5000
+- **Database**: localhost:5432
+
+To stop the application:
+```sh
+docker compose down
+
+# To also remove the database volume:
+docker compose down -v
+```
+
+### Environment Variables
+
+Copy `.env.example` to `.env` and customize if needed:
+
+```sh
+cp .env.example .env
+```
+
+Key variables:
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DB_USER` | postgres | Database username |
+| `DB_PASSWORD` | postgres123 | Database password |
+| `DB_NAME` | esports_betting | Database name |
+| `JWT_SECRET` | (change me) | Secret for JWT tokens |
+| `NEXT_PUBLIC_API_URL` | http://localhost:5000 | API URL for frontend |
+
+### Default Accounts
+
+The application automatically seeds default accounts on first startup:
+
+| Role | Username | Email | Password | Balance |
+|------|----------|-------|----------|---------|
+| **Admin** | `admin` | admin@esportsbetting.com | `Admin123` | $10,000 |
+| **User** | `user` | user@esportsbetting.com | `User123` | $1,000 |
+
+The seeder also creates sample games (CS:GO, League of Legends, Dota 2, Valorant) and teams.
+
+### Prerequisites (Manual Setup)
+
+If you prefer to run without Docker:
 
 To run this app you need Node.js and a few other tools. This is an example of how to list things you need to use the software and how to install them.
 
@@ -160,26 +219,56 @@ Notes:
 - Replace placeholder secrets and API keys with secure values.
 - Follow the Installation section in the README after installing these prerequisites.
 
-### Installation
+### Installation (Manual Setup)
 
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
+1. Clone the repo
    ```sh
-   git clone https://github.com/github_username/repo_name.git
+   git clone https://github.com/WessimH/jihadprojet.git
+   cd jihadprojet
    ```
-3. Install NPM packages
+
+2. Start PostgreSQL database
    ```sh
+   docker run --name esports-db -e POSTGRES_PASSWORD=postgres123 -e POSTGRES_USER=postgres -e POSTGRES_DB=esports_betting -p 5432:5432 -d postgres:15-alpine
+   ```
+
+3. Install and run Backend
+   ```sh
+   cd backend
    npm install
+   
+   # Create .env file
+   echo "DB_HOST=localhost
+   DB_PORT=5432
+   DB_USER=postgres
+   DB_PASSWORD=postgres123
+   DB_NAME=esports_betting
+   JWT_SECRET=your-secret-key
+   PORT=5000" > .env
+   
+   npm run start:dev
    ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
-   ```
-5. Change git remote url to avoid accidental pushes to base project
+
+4. Install and run Frontend (in another terminal)
    ```sh
-   git remote set-url origin github_username/repo_name
-   git remote -v # confirm the changes
+   cd frontend
+   npm install
+   
+   # Create .env file
+   echo "NEXT_PUBLIC_API_URL=http://localhost:5000" > .env.local
+   
+   npm run dev
    ```
+
+5. Access the application
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:5000
+
+### Default Admin Account
+
+After starting the application, you can login with:
+- **Username**: admin
+- **Password**: Admin123
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -188,7 +277,30 @@ Notes:
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+### API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/auth/login` | POST | Login and get JWT token |
+| `/auth/profile` | GET | Get current user profile |
+| `/users` | GET/POST | List/create users |
+| `/teams` | GET/POST | List/create teams |
+| `/matches` | GET/POST | List/create matches |
+| `/games` | GET/POST | List/create games |
+| `/bets` | GET/POST | List/create bets |
+
+### Testing the API
+
+```sh
+# Login
+curl -X POST http://localhost:5000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"Admin123"}'
+
+# Get teams (with token)
+curl http://localhost:5000/teams \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
 
 _For more examples, please refer to the [Documentation](https://example.com)_
 

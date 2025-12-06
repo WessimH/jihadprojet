@@ -19,6 +19,7 @@ import { BetsModule } from './bets/bets.module';
 import { GamesModule } from './games/games.module';
 import { MatchOddsModule } from './match-odds/match-odds.module';
 import { UsersModule } from './users/users.module';
+import { DatabaseModule } from './database/database.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { UsersModule } from './users/users.module';
     BetsModule,
     GamesModule,
     MatchOddsModule,
+    DatabaseModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,67 +1,97 @@
+# ==========================================
+# Esports Betting App - Docker Compose
+# ==========================================
+# Run with: docker compose up
+# Build fresh: docker compose up --build
+# Stop: docker compose down
+# Reset (with volumes): docker compose down -v
+
 services:
+  # ==========================================
+  # Frontend - Next.js Application
+  # ==========================================
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:5000}
     ports:
       - "3000:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:5000}
+      - INTERNAL_API_URL=${INTERNAL_API_URL:-http://backend:5000}
     depends_on:
       backend:
         condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app-network
 
+  # ==========================================
+  # Backend - NestJS API
+  # ==========================================
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     ports:
       - "5000:5000"
-    healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:5000/api-json', r => process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]
-      interval: 5s
-      timeout: 5s
-      retries: 10
     environment:
-      # Use env-variable substitution so creds can live outside the repo
-      # Provide via your shell, CI, or a .env file at project root
-      DATABASE_HOST: ${DATABASE_HOST:-db}
-      DATABASE_PORT: ${DATABASE_PORT:-5432}
-      DATABASE_USER: ${DATABASE_USER}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-      DATABASE_NAME: ${DATABASE_NAME}
-      # Optional full URL if your app uses a single string
-      DATABASE_URL: ${DATABASE_URL}
-      NODE_ENV: ${NODE_ENV:-development}
-      PORT: ${PORT:-5000}
-      # TypeORM config keys used in AppModule (mirror values)
-      DB_HOST: ${DB_HOST:-db}
-      DB_PORT: ${DB_PORT:-5432}
-      DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
-      DB_NAME: ${DB_NAME:-app_db}
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=${PORT:-5000}
+      - DB_HOST=${DB_HOST:-db}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres123}
+      - DB_NAME=${DB_NAME:-esports_betting}
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/auth/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - app-network
 
+  # ==========================================
+  # Database - PostgreSQL
+  # ==========================================
   db:
-    image: postgres:15
+    image: postgres:15-alpine
     ports:
       - "5432:5432"
     environment:
-      # Postgres official envs resolved from external creds
-      POSTGRES_USER: ${DATABASE_USER}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-      POSTGRES_DB: ${DATABASE_NAME}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres123}
+      - POSTGRES_DB=${POSTGRES_DB:-esports_betting}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-esports_betting}"]
       interval: 10s
       timeout: 5s
       retries: 5
     volumes:
       - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - app-network
 
+# ==========================================
+# Networks
+# ==========================================
 networks:
-  default:
+  app-network:
     driver: bridge
 
+# ==========================================
+# Volumes
+# ==========================================
 volumes:
   pgdata:
+    driver: local

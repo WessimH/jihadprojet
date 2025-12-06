@@ -1,26 +1,49 @@
-# Use the official Node.js image as the base image
-FROM node:20
+# ================================
+# Stage 1: Build
+# ================================
+FROM node:20-alpine AS builder
 
-# Set the working directory inside the container
-WORKDIR /usr/src/app
+WORKDIR /app
 
-# Copy package.json and package-lock.json to the working directory
+# Copy package files
 COPY package*.json ./
 
-# Install the application dependencies
-RUN npm install
+# Install all dependencies (including devDependencies for build)
+RUN npm ci
 
-# Copy the rest of the application files
+# Copy source code
 COPY . .
 
-# Build the NestJS application
+# Build the application
 RUN npm run build
 
-# Expose the application port (matches PORT env / compose mapping)
+# ================================
+# Stage 2: Production
+# ================================
+FROM node:20-alpine AS production
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install only production dependencies
+RUN npm ci --only=production
+
+# Copy built application from builder stage
+COPY --from=builder /app/dist ./dist
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nestjs -u 1001
+USER nestjs
+
+# Expose the application port
 EXPOSE 5000
 
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:5000/auth/health || exit 1
 
 # Command to run the application
 CMD ["node", "dist/main"]
-
-# where flake.nix ?
