@@ -19,7 +19,7 @@ import {
 } from '@nestjs/swagger';
 
 @ApiTags('Bets')
-@Controller('bets')
+@Controller('bets') //anyone can create bets for anyone
 export class BetsController {
   constructor(private readonly betsService: BetsService) {}
 
