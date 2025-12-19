@@ -27,7 +27,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     networks:
-      - app-network
+      - frontend-network
 
   # ==========================================
   # Backend - NestJS API
@@ -58,7 +58,8 @@ services:
       start_period: 30s
     restart: unless-stopped
     networks:
-      - app-network
+      - frontend-network
+      - backend-network
 
   # ==========================================
   # Database - PostgreSQL
@@ -80,13 +81,15 @@ services:
       - pgdata:/var/lib/postgresql/data
     restart: unless-stopped
     networks:
-      - app-network
+      - backend-network
 
 # ==========================================
 # Networks
 # ==========================================
 networks:
-  app-network:
+  frontend-network:
+    driver: bridge
+  backend-network:
     driver: bridge
 
 # ==========================================
